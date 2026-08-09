@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TBKO WEAR - Catalog</title>
+  
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            tbkoNavy: '#1D3B6A',
+            tbkoRust: '#B85C28',
+            tbkoGold: '#D6923E',
+            tbkoBg: '#F8F9FA'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-tbkoBg text-gray-800 font-sans pb-20">
+
+  <!-- Header -->
+  <header class="bg-tbkoNavy text-white p-4 sticky top-0 z-50 flex justify-between items-center shadow-md">
+    <div>
+      <h1 class="text-xl font-bold tracking-wider">TBKO WEAR</h1>
+      <p class="text-xs text-tbkoGold italic">Wear Your Identity</p>
+    </div>
+    <div class="relative">
+      <!-- ወደ checkout.html የሚወስድ ሊንክ -->
+      <a href="checkout.html" class="bg-tbkoRust p-2 rounded-full text-white font-bold text-sm inline-block shadow">
+        🛒 <span id="cartCount" class="bg-white text-tbkoNavy text-xs px-1.5 py-0.5 rounded-full font-bold">0</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Banner / Custom Order CTA -->
+  <div class="m-4 p-4 bg-gradient-to-r from-tbkoNavy to-slate-800 text-white rounded-2xl shadow-lg flex justify-between items-center">
+    <div>
+      <h2 class="font-bold text-lg">የራስዎን ዲዛይን ያትሙ!</h2>
+      <p class="text-xs text-gray-300">ምስል ወይም ፅሁፍ በመላክ ብጁ ቲሸርት ይዘዙ</p>
+      <!-- ወደ custom.html የሚወስድ ሊንክ -->
+      <a href="custom.html" class="inline-block mt-3 bg-tbkoRust hover:bg-orange-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition shadow">
+        Custom Order ➔
+      </a>
+    </div>
+    <div class="text-4xl">🎨</div>
+  </div>
+
+  <!-- Categories Filter (Single Page Navigation) -->
+  <div class="flex space-x-2 px-4 overflow-x-auto py-2" id="categoryButtons">
+    <button onclick="filterCategory('all', this)" class="cat-btn active-cat bg-tbkoNavy text-white text-xs font-medium px-4 py-2 rounded-full whitespace-nowrap shadow-sm">
+      ሁሉም
+    </button>
+    <button onclick="filterCategory('casual', this)" class="cat-btn bg-white text-tbkoNavy border border-tbkoNavy text-xs font-medium px-4 py-2 rounded-full whitespace-nowrap shadow-sm">
+      Casual Tees
+    </button>
+    <button onclick="filterCategory('polo', this)" class="cat-btn bg-white text-tbkoNavy border border-tbkoNavy text-xs font-medium px-4 py-2 rounded-full whitespace-nowrap shadow-sm">
+      Polo
+    </button>
+    <button onclick="filterCategory('cultural', this)" class="cat-btn bg-white text-tbkoNavy border border-tbkoNavy text-xs font-medium px-4 py-2 rounded-full whitespace-nowrap shadow-sm">
+      Cultural Prints
+    </button>
+  </div>
+
+  <!-- Product Grid -->
+  <div class="p-4 grid grid-cols-2 gap-4" id="productGrid">
+    
+    <!-- 1. Casual Tee (Sample 1) -->
+    <div class="product-item casual bg-white rounded-xl shadow border border-gray-100 overflow-hidden flex flex-col justify-between">
+      <div class="relative">
+        <span class="absolute top-2 left-2 bg-tbkoGold text-white text-[10px] font-bold px-2 py-0.5 rounded">NEW</span>
+        <img src="https://via.placeholder.com/150/1D3B6A/FFFFFF?text=Black+Tee" alt="T-Shirt" class="w-full h-40 object-cover">
+      </div>
+      <div class="p-3">
+        <h3 class="font-bold text-tbkoNavy text-sm">Classic Black Tee</h3>
+        <p class="text-xs text-gray-500 my-1">100% Pure Cotton</p>
+        <div class="flex justify-between items-center mt-2">
+          <span class="font-extrabold text-tbkoRust text-sm">800 ETB</span>
+          <button onclick="addToCart()" class="bg-tbkoNavy text-white text-xs px-2.5 py-1.5 rounded-lg hover:bg-blue-900 shadow">+ Add</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Casual Tee (Sample 2) -->
+    <div class="product-item casual bg-white rounded-xl shadow border border-gray-100 overflow-hidden flex flex-col justify-between">
+      <div class="relative">
+        <img src="https://via.placeholder.com/150/555555/FFFFFF?text=White+Tee" alt="T-Shirt" class="w-full h-40 object-cover">
+      </div>
+      <div class="p-3">
+        <h3 class="font-bold text-tbkoNavy text-sm">White Minimal Tee</h3>
+        <p class="text-xs text-gray-500 my-1">Soft Heavyweight</p>
+        <div class="flex justify-between items-center mt-2">
+          <span class="font-extrabold text-tbkoRust text-sm">750 ETB</span>
+          <button onclick="addToCart()" class="bg-tbkoNavy text-white text-xs px-2.5 py-1.5 rounded-lg hover:bg-blue-900 shadow">+ Add</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Polo Tee (Sample 1) -->
+    <div class="product-item polo bg-white rounded-xl shadow border border-gray-100 overflow-hidden flex flex-col justify-between">
+      <div class="relative">
+        <span class="absolute top-2 left-2 bg-tbkoRust text-white text-[10px] font-bold px-2 py-0.5 rounded">HOT</span>
+        <img src="https://via.placeholder.com/150/1D3B6A/FFFFFF?text=Navy+Polo" alt="Polo" class="w-full h-40 object-cover">
+      </div>
+      <div class="p-3">
+        <h3 class="font-bold text-tbkoNavy text-sm">Navy Blue Polo</h3>
+        <p class="text-xs text-gray-500 my-1">Collared Smart Fit</p>
+        <div class="flex justify-between items-center mt-2">
+          <span class="font-extrabold text-tbkoRust text-sm">1,100 ETB</span>
+          <button onclick="addToCart()" class="bg-tbkoNavy text-white text-xs px-2.5 py-1.5 rounded-lg hover:bg-blue-900 shadow">+ Add</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Polo Tee (Sample 2) -->
+    <div class="product-item polo bg-white rounded-xl shadow border border-gray-100 overflow-hidden flex flex-col justify-between">
+      <div class="relative">
+        <img src="https://via.placeholder.com/150/B85C28/FFFFFF?text=Red+Polo" alt="Polo" class="w-full h-40 object-cover">
+      </div>
+      <div class="p-3">
+        <h3 class="font-bold text-tbkoNavy text-sm">Premium Polo</h3>
+        <p class="text-xs text-gray-500 my-1">Breathable Fabric</p>
+        <div class="flex justify-between items-center mt-2">
+          <span class="font-extrabold text-tbkoRust text-sm">1,250 ETB</span>
+          <button onclick="addToCart()" class="bg-tbkoNavy text-white text-xs px-2.5 py-1.5 rounded-lg hover:bg-blue-900 shadow">+ Add</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Cultural Print (Sample 1) -->
+    <div class="product-item cultural bg-white rounded-xl shadow border border-gray-100 overflow-hidden flex flex-col justify-between">
+      <div class="relative">
+        <span class="absolute top-2 left-2 bg-tbkoRust text-white text-[10px] font-bold px-2 py-0.5 rounded">HOT</span>
+        <img src="https://via.placeholder.com/150/D6923E/FFFFFF?text=Cultural+Art" alt="Cultural" class="w-full h-40 object-cover">
+      </div>
+      <div class="p-3">
+        <h3 class="font-bold text-tbkoNavy text-sm">Cultural Art Tee</h3>
+        <p class="text-xs text-gray-500 my-1">Traditional Design</p>
+        <div class="flex justify-between items-center mt-2">
+          <span class="font-extrabold text-tbkoRust text-sm">1,200 ETB</span>
+          <button onclick="addToCart()" class="bg-tbkoNavy text-white text-xs px-2.5 py-1.5 rounded-lg hover:bg-blue-900 shadow">+ Add</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Cultural Print (Sample 2) -->
+    <div class="product-item cultural bg-white rounded-xl shadow border border-gray-100 overflow-hidden flex flex-col justify-between">
+      <div class="relative">
+        <span class="absolute top-2 left-2 bg-tbkoGold text-white text-[10px] font-bold px-2 py-0.5 rounded">POPULAR</span>
+        <img src="https://via.placeholder.com/150/1D3B6A/FFFFFF?text=Habesha+Pattern" alt="Cultural" class="w-full h-40 object-cover">
+      </div>
+      <div class="p-3">
+        <h3 class="font-bold text-tbkoNavy text-sm">Habesha Pattern Tee</h3>
+        <p class="text-xs text-gray-500 my-1">Unique Neck Embroidery</p>
+        <div class="flex justify-between items-center mt-2">
+          <span class="font-extrabold text-tbkoRust text-sm">1,350 ETB</span>
+          <button onclick="addToCart()" class="bg-tbkoNavy text-white text-xs px-2.5 py-1.5 rounded-lg hover:bg-blue-900 shadow">+ Add</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- JavaScript for Single Page Category Filtering & Cart Counter -->
+  <script>
+    // 1. Initialize Telegram WebApp
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+    }
+
+    // 2. Category Filter Logic
+    function filterCategory(category, clickedBtn) {
+      const items = document.querySelectorAll('.product-item');
+      const buttons = document.querySelectorAll('.cat-btn');
+
+      // Style resetting for category buttons
+      buttons.forEach(btn => {
+        btn.classList.remove('bg-tbkoNavy', 'text-white');
+        btn.classList.add('bg-white', 'text-tbkoNavy', 'border', 'border-tbkoNavy');
+      });
+
+      // Highlight selected button
+      clickedBtn.classList.remove('bg-white', 'text-tbkoNavy', 'border', 'border-tbkoNavy');
+      clickedBtn.classList.add('bg-tbkoNavy', 'text-white');
+
+      // Show/Hide Products
+      items.forEach(item => {
+        if (category === 'all' || item.classList.contains(category)) {
+          item.style.display = 'flex';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    }
+
+    // 3. Simple Cart Counter Logic
+    let cartCount = 0;
+    function addToCart() {
+      cartCount++;
+      document.getElementById('cartCount').innerText = cartCount;
+    }
+  </script>
+
+</body>
+</html>

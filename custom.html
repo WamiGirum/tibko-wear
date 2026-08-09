@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TBKO WEAR - Custom Order</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            tbkoNavy: '#1D3B6A',
+            tbkoRust: '#B85C28',
+            tbkoGold: '#D6923E',
+            tbkoBg: '#F8F9FA'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-tbkoBg text-gray-800 font-sans p-4 pb-20">
+
+  <!-- Back Button -->
+  <a href="index.html" class="text-sm text-tbkoNavy font-bold mb-4 inline-block">← ወደ ካታሎግ ተመለስ</a>
+
+  <h2 class="text-xl font-bold text-tbkoNavy mb-1">ብጁ ትዕዛዝ (Custom Design)</h2>
+  <p class="text-xs text-gray-600 mb-4">ቲሸርት ላይ እንዲታተም የሚፈልጉትን ዲዛይን (ምስል ወይም PDF) ያያይዙ</p>
+
+  <form id="customForm" class="space-y-4">
+    
+    <!-- File Upload Area -->
+    <div class="border-2 border-dashed border-tbkoNavy/40 bg-white p-6 rounded-xl text-center">
+      <div class="text-4xl mb-2">📁</div>
+      <p class="text-xs font-semibold text-tbkoNavy">ምስል ወይም PDF ፋይል ይምረጡ</p>
+      <p class="text-[10px] text-gray-400 mt-1">PNG, JPG, PDF (Up to 10MB)</p>
+
+      <!-- HTML File Input -->
+      <input type="file" id="fileInput" accept=".png, .jpg, .jpeg, .pdf" class="hidden" onchange="showFileName()">
+      <label for="fileInput" class="inline-block mt-3 bg-tbkoNavy text-white text-xs px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition">
+        ፋይል ፈልግ (Browse)
+      </label>
+
+      <!-- Selected File Display -->
+      <p id="fileNameDisplay" class="text-xs text-tbkoRust font-bold mt-3 hidden"></p>
+    </div>
+
+    <!-- Instructions Text Box -->
+    <div class="bg-white p-4 rounded-xl shadow-sm border">
+      <label class="block text-xs font-bold text-tbkoNavy mb-2">ተጨማሪ መመሪያ (Optional)</label>
+      <textarea id="desc" rows="3" placeholder="ምስሉ ደረት ላይ በግራ ይሁን? ወይም ሌላ አስተያየት..." class="w-full text-xs p-3 border rounded-lg focus:outline-none focus:border-tbkoNavy"></textarea>
+    </div>
+
+    <!-- Size & Quantity -->
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="block text-xs font-bold text-tbkoNavy mb-1">መጠን (Size)</label>
+        <select id="size" class="w-full text-xs p-2.5 border rounded-lg bg-white">
+          <option>Small (S)</option>
+          <option>Medium (M)</option>
+          <option>Large (L)</option>
+          <option>X-Large (XL)</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-tbkoNavy mb-1">ብዛት (Qty)</label>
+        <input id="qty" type="number" value="1" min="1" class="w-full text-xs p-2.5 border rounded-lg">
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <button type="button" onclick="submitCustomOrder()" class="w-full bg-tbkoRust hover:bg-orange-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition">
+      ትዕዛዝ ላክ (Submit)
+    </button>
+  </form>
+
+  <script>
+    // 1. Show Selected File Name
+    function showFileName() {
+      const fileInput = document.getElementById('fileInput');
+      const display = document.getElementById('fileNameDisplay');
+      
+      if (fileInput.files.length > 0) {
+        display.innerText = "📌 የተመረጠ ፋይል: " + fileInput.files[0].name;
+        display.classList.remove('hidden');
+      }
+    }
+
+    // 2. Submit Data
+    function submitCustomOrder() {
+      const fileInput = document.getElementById('fileInput');
+      
+      if (fileInput.files.length === 0) {
+        alert("እባክዎን አስቀድመው ዲዛይን (ምስል ወይም PDF) ይምረጡ!");
+        return;
+      }
+
+      const selectedFile = fileInput.files[0];
+      const data = {
+        type: "CUSTOM_ORDER",
+        fileName: selectedFile.name,
+        fileType: selectedFile.type,
+        description: document.getElementById('desc').value,
+        size: document.getElementById('size').value,
+        qty: document.getElementById('qty').value
+      };
+      
+      if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.sendData(JSON.stringify(data));
+      } else {
+        alert("ትዕዛዝዎ ተልኳል!");
+      }
+    }
+  </script>
+</body>
+</html>
