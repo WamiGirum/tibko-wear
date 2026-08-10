@@ -3,14 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>tibko WEAR - Checkout</title>
-
-  <!-- Telegram WebApp SDK -->
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- Tailwind CSS -->
+  <title>tibko - Admin Panel</title>
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Firebase Compatibility SDKs -->
+  <!-- Firebase Realtime Database SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
@@ -19,148 +14,199 @@
       theme: {
         extend: {
           colors: {
-            tbkoNavy: '#1D3B6A',
-            tbkoRust: '#B85C28',
-            tbkoGold: '#D6923E',
-            tbkoBg: '#F8F9FA'
+            tibkoNavy: '#1D3B6A',
+            tibkoRust: '#B85C28',
+            tibkoGold: '#D6923E'
           }
         }
       }
     }
   </script>
 </head>
-<body class="bg-tbkoBg text-gray-800 font-sans p-4 pb-20">
+<body class="bg-slate-100 text-gray-800 font-sans pb-12 p-4">
 
-  <!-- Header & Back Button -->
-  <div class="flex justify-between items-center mb-4">
-    <a href="index.html" class="text-sm text-tbkoNavy font-bold">← ወደ ካታሎግ ተመለስ</a>
-    <span id="orderIdTag" class="text-xs font-mono font-bold bg-tbkoRust text-white px-2 py-1 rounded">#TBK-0000</span>
-  </div>
-
-  <h2 class="text-xl font-bold text-tbkoNavy mb-2">ትዕዛዝ አረጋግጥ & ክፍያ</h2>
-
-  <!-- Contact Info Section (Phone & Telegram Username) -->
-  <div class="bg-white p-4 rounded-xl shadow-sm border mb-4 space-y-3">
-    <div>
-      <label class="block text-xs font-bold text-tbkoNavy mb-1">ስልክ ቁጥር <span class="text-red-500">*</span></label>
-      <input type="tel" id="phone" placeholder="0912345678" class="w-full text-xs p-3 border rounded-lg focus:outline-none focus:border-tbkoNavy font-semibold" required>
-    </div>
-    
-    <div>
-      <label class="block text-xs font-bold text-tbkoNavy mb-1">የቴሌግራም ዩዘርኔም (Telegram Username) <span class="text-red-500">*</span></label>
-      <input type="text" id="tgUsername" placeholder="@username" class="w-full text-xs p-3 border rounded-lg focus:outline-none focus:border-tbkoNavy font-semibold" required>
+  <!-- Image Preview Modal -->
+  <div id="imageModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white p-4 rounded-2xl shadow-2xl max-w-sm w-full relative">
+      <button onclick="closeImageModal()" class="absolute -top-3 -right-3 bg-red-600 text-white rounded-full w-8 h-8 font-bold shadow flex items-center justify-center text-sm">✕</button>
+      <h3 class="font-bold text-tibkoNavy text-xs mb-2">🖼️ የክፍያ ደረሰኝ (Screenshot)</h3>
+      <img id="modalImage" src="" class="w-full max-h-[70vh] object-contain rounded-lg border bg-slate-50">
+      <div class="mt-3 flex justify-between gap-2">
+        <a id="modalDownloadLink" href="#" target="_blank" download class="flex-1 text-center bg-tibkoNavy text-white py-2 rounded-lg text-xs font-bold">⬇️ አውርድ (Download)</a>
+        <button onclick="closeImageModal()" class="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg text-xs font-bold">ዝጋ</button>
+      </div>
     </div>
   </div>
 
-  <!-- Item Quantity Selection (Catalog Only) -->
-  <div id="catalogQtySection" class="bg-white p-4 rounded-xl shadow-sm border mb-4">
-    <div class="flex justify-between items-center">
-      <label class="text-xs font-bold text-tbkoNavy">የዕቃዎች ብዛት (Quantity)፦</label>
-      <input type="number" id="catalogQty" value="1" min="1" onchange="calculatePrices()" onkeyup="calculatePrices()" class="w-20 text-xs p-2 border rounded-lg text-center font-bold">
+  <!-- Password Overlay -->
+  <div id="loginOverlay" class="fixed inset-0 bg-tibkoNavy z-50 flex items-center justify-center p-4">
+    <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm text-center">
+      <h2 class="text-xl font-bold text-tibkoNavy mb-2">tibko Admin Login</h2>
+      <p class="text-xs text-gray-500 mb-4">ለመቀጠል የይለፍ ቃል ያስገቡ</p>
+      <input type="password" id="adminPass" placeholder="Password" class="w-full border p-2.5 rounded-lg text-center font-bold mb-3 focus:outline-none focus:ring-2 focus:ring-tibkoNavy">
+      <button onclick="checkPass()" class="w-full bg-tibkoNavy text-white py-2.5 rounded-lg font-bold">ግባ (Login)</button>
     </div>
   </div>
 
-  <!-- Delivery Method Selection -->
-  <div class="bg-white p-4 rounded-xl shadow-sm border mb-4">
-    <h3 class="font-bold text-xs text-tbkoNavy mb-3">የመረከቢያ መንገድ</h3>
-    
-    <div class="space-y-3 text-xs">
-      <label class="flex items-center space-x-2 cursor-pointer">
-        <input type="radio" name="deliveryOption" value="Pickup" checked class="text-tbkoNavy" onchange="handleDeliveryChange()"> 
-        <span class="font-semibold">ከሱቅ እወስዳለሁ (Pickup)</span>
-      </label>
-      
-      <div id="pickupBranchSection" class="pl-6">
-        <label class="block text-[11px] text-gray-500 mb-1">የሚቀርብዎትን ቅርንጫፍ ይምረጡ፦</label>
-        <select id="pickupBranch" class="w-full text-xs p-2.5 border rounded-lg bg-slate-50 text-tbkoNavy font-medium">
-          <option value="ቄራ (Kera)">ቄራ</option>
-          <option value="ተክለሃይማኖት (Teklehaimanot)">ተክለሃይማኖት</option>
-          <option value="ሜክሲኮ (Mexico)">ሜክሲኮ</option>
-          <option value="ፒያሳ (Piassa)">ፒያሳ</option>
-        </select>
+  <div class="max-w-md mx-auto">
+    <!-- Header -->
+    <header class="bg-tibkoNavy text-white p-4 rounded-xl shadow mb-4 flex justify-between items-center">
+      <div>
+        <h1 class="font-bold text-lg">tibko Admin</h1>
+        <p class="text-[10px] text-tibkoGold">የዕቃዎችና የትዕዛዝ መቆጣጠሪያ ሰሌዳ</p>
+      </div>
+      <a href="index.html" class="bg-white/10 text-xs px-3 py-1.5 rounded-lg">ወደ ካታሎግ ➔</a>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="flex gap-2 mb-4 bg-white p-1 rounded-xl border shadow-sm text-xs font-bold">
+      <button id="tabProductsBtn" onclick="switchTab('products')" class="flex-1 py-2 rounded-lg bg-tibkoNavy text-white transition">
+        📦 ምርቶች (Products)
+      </button>
+      <button id="tabOrdersBtn" onclick="switchTab('orders')" class="flex-1 py-2 rounded-lg text-gray-600 hover:bg-slate-100 transition flex items-center justify-center gap-1">
+        🛒 የገቡ ትዕዛዞች <span id="ordersCountBadge" class="bg-tibkoRust text-white text-[10px] px-1.5 py-0.5 rounded-full hidden">0</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: PRODUCTS SECTION -->
+    <div id="productsSection">
+      <!-- Add/Edit Product Form -->
+      <div class="bg-white p-4 rounded-xl shadow mb-6 border">
+        <h2 id="formTitle" class="font-bold text-tibkoNavy mb-3 text-sm flex items-center gap-1">
+          <span>➕</span> አዲስ ቲሸርት መዝግብ
+        </h2>
+
+        <form id="addProductForm" onsubmit="saveProduct(event)" class="space-y-3">
+          <input type="hidden" id="editKey">
+          <input type="hidden" id="currentImageUrl">
+
+          <div>
+            <label class="text-xs font-bold text-gray-600 block mb-1">የቲሸርቱ ስም</label>
+            <input type="text" id="title" required placeholder="ex: tibko Oversized Rust" class="w-full border p-2 rounded-lg text-xs">
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs font-bold text-gray-600 block mb-1">ካቴጎሪ</label>
+              <select id="category" class="w-full border p-2 rounded-lg text-xs bg-white">
+                <option value="casual">Casual Tees</option>
+                <option value="polo">Polo</option>
+                <option value="cultural">Cultural Prints</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs font-bold text-gray-600 block mb-1">ዋጋ (ETB)</label>
+              <input type="number" id="price" required placeholder="800" class="w-full border p-2 rounded-lg text-xs">
+            </div>
+          </div>
+
+          <!-- Image File Upload -->
+          <div>
+            <label class="text-xs font-bold text-gray-600 block mb-1">የቲሸርቱ ፎቶ (Upload Image)</label>
+            <input type="file" id="imageFile" accept="image/*" class="w-full border p-2 rounded-lg text-xs bg-white">
+            <p class="text-[10px] text-gray-400 mt-0.5">ከስልክዎ ወይም ከኮምፒዩተርዎ ፎቶ ይምረጡ</p>
+            <div id="imagePreview" class="mt-2 hidden">
+              <p class="text-[10px] text-gray-500 mb-1">የአሁን ፎቶ፦</p>
+              <img id="previewImg" src="" class="w-16 h-16 object-cover rounded border">
+            </div>
+          </div>
+
+          <!-- Sizes Selection -->
+          <div>
+            <label class="text-xs font-bold text-gray-600 block mb-1">ያሉ መጠኖች (Sizes)</label>
+            <div class="flex flex-wrap gap-2 text-xs">
+              <label class="flex items-center space-x-1 bg-gray-50 px-2 py-1 rounded border">
+                <input type="checkbox" value="S" class="size-checkbox"> <span>S</span>
+              </label>
+              <label class="flex items-center space-x-1 bg-gray-50 px-2 py-1 rounded border">
+                <input type="checkbox" value="M" class="size-checkbox" checked> <span>M</span>
+              </label>
+              <label class="flex items-center space-x-1 bg-gray-50 px-2 py-1 rounded border">
+                <input type="checkbox" value="L" class="size-checkbox" checked> <span>L</span>
+              </label>
+              <label class="flex items-center space-x-1 bg-gray-50 px-2 py-1 rounded border">
+                <input type="checkbox" value="XL" class="size-checkbox" checked> <span>XL</span>
+              </label>
+              <label class="flex items-center space-x-1 bg-gray-50 px-2 py-1 rounded border">
+                <input type="checkbox" value="XXL" class="size-checkbox"> <span>XXL</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Colors Selection -->
+          <div>
+            <label class="text-xs font-bold text-gray-600 block mb-1">ያሉ ቀለሞች (በኮማ ይለዩ)</label>
+            <input type="text" id="colors" placeholder="ጥቁር, ነጭ, ቡናማ" class="w-full border p-2 rounded-lg text-xs">
+          </div>
+
+          <!-- Badge Tag & Subtitle -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs font-bold text-gray-600 block mb-1">ምልክት (Tag/Badge)</label>
+              <select id="tag" class="w-full border p-2 rounded-lg text-xs bg-white">
+                <option value="">ምንም</option>
+                <option value="NEW">NEW</option>
+                <option value="HOT">HOT</option>
+                <option value="POPULAR">POPULAR</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs font-bold text-gray-600 block mb-1">አጭር መግለጫ (Subtitle)</label>
+              <input type="text" id="subtitle" placeholder="100% Pure Cotton" class="w-full border p-2 rounded-lg text-xs">
+            </div>
+          </div>
+
+          <button type="submit" id="submitBtn" class="w-full bg-tibkoRust text-white font-bold py-2.5 rounded-lg text-xs shadow hover:bg-orange-700 transition flex items-center justify-center gap-2">
+            <span>💾</span> <span id="submitBtnText">ዕቃውን ለጥፍ (Upload Product)</span>
+          </button>
+
+          <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden w-full bg-gray-200 text-gray-700 font-bold py-2 rounded-lg text-xs transition">
+            ❌ ሰርዝ (Cancel Edit)
+          </button>
+        </form>
       </div>
 
-      <hr class="my-2 border-gray-100">
-
-      <label class="flex items-center space-x-2 cursor-pointer">
-        <input type="radio" name="deliveryOption" value="Delivery" class="text-tbkoNavy" onchange="handleDeliveryChange()"> 
-        <span class="font-semibold">መላኪያ (Delivery)</span>
-      </label>
-
-      <div id="deliveryLocationSection" class="pl-6 space-y-2 hidden">
-        <div>
-          <label class="block text-[11px] text-gray-500 mb-1">የመላኪያ ክልል/ቦታ ይምረጡ፦</label>
-          <select id="deliveryZone" onchange="calculatePrices()" class="w-full text-xs p-2.5 border rounded-lg bg-slate-50 text-tbkoNavy font-medium">
-            <option value="AddisAbaba" data-fee="150">አዲስ አበባ ውስጥ (150 ETB)</option>
-            <option value="Regional" data-fee="300">ክፍለ ሀገር (300 ETB)</option>
-          </select>
+      <!-- Live Products List -->
+      <div class="bg-white p-4 rounded-xl shadow border">
+        <h2 class="font-bold text-tibkoNavy mb-3 text-sm">📦 በካታሎግ ላይ ያሉ ዕቃዎች</h2>
+        <div id="adminProductList" class="space-y-3">
+          <p class="text-xs text-gray-400 text-center py-4">በመጫን ላይ...</p>
         </div>
+      </div>
+    </div>
 
-        <div>
-          <label class="block text-[11px] text-gray-500 mb-1">ትክክለኛ አድራሻ (ክፍለ ከተማ / ሰፈር)፦</label>
-          <input type="text" id="deliveryAddress" placeholder="ምሳሌ፦ ቦሌ መድኃኔዓለም / ቂርቆስ ወረዳ 02" class="w-full text-xs p-2.5 border rounded-lg bg-slate-50">
+    <!-- TAB 2: ORDERS SECTION -->
+    <div id="ordersSection" class="hidden">
+      <div class="bg-white p-4 rounded-xl shadow border">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="font-bold text-tibkoNavy text-sm">🛒 የደንበኞች ትዕዛዞች</h2>
+          <div class="flex gap-1">
+            <button onclick="clearApprovedOrders()" class="bg-amber-100 text-amber-800 hover:bg-amber-200 text-[10px] font-bold px-2 py-1 rounded border border-amber-300">
+              🧹 Approved የሆኑትን አፅዳ
+            </button>
+            <button onclick="deleteAllOrders()" class="bg-red-100 text-red-700 hover:bg-red-200 text-[10px] font-bold px-2 py-1 rounded border border-red-300">
+              🗑️ ሁሉንም አፅዳ
+            </button>
+          </div>
+        </div>
+        <div id="adminOrdersList" class="space-y-4">
+          <p class="text-xs text-gray-400 text-center py-4">ትዕዛዞች በመጫን ላይ...</p>
         </div>
       </div>
     </div>
+
   </div>
-
-  <!-- Pricing & Advance Breakdown -->
-  <div class="bg-white p-4 rounded-xl shadow-sm border space-y-2 mb-4 text-xs">
-    <div class="flex justify-between text-gray-600">
-      <span>የዕቃዎች ዋጋ:</span>
-      <span id="itemsTotal">800 ETB</span>
-    </div>
-    <div class="flex justify-between text-gray-600">
-      <span>የትራንስፖርት ክፍያ:</span>
-      <span id="deliveryFee">0 ETB</span>
-    </div>
-    <hr class="my-1">
-    <div class="flex justify-between font-bold text-sm text-tbkoNavy">
-      <span>ጠቅላላ ሂሳብ:</span>
-      <span id="grandTotal">800 ETB</span>
-    </div>
-
-    <!-- Advance Payment Dynamic Box -->
-    <div id="advanceRuleBox" class="mt-3 p-3 rounded-lg border bg-amber-50 border-amber-200 text-amber-900">
-      <div class="flex justify-between font-extrabold text-xs">
-        <span id="advanceRuleTitle">የሚፈለግ ቅድመ ክፍያ (ቀብድ)፦</span>
-        <span id="requiredAdvanceText" class="text-tbkoRust text-sm">0 ETB</span>
-      </div>
-      <p id="advanceRuleNote" class="text-[10px] text-amber-700 mt-1 font-semibold"></p>
-    </div>
-  </div>
-
-  <!-- Bank Details & Receipt Upload -->
-  <div class="bg-white p-4 rounded-xl shadow-sm border space-y-3 mb-4">
-    <h3 class="font-bold text-xs text-tbkoNavy">የክፍያ አካውንቶች</h3>
-    <div class="bg-slate-50 p-3 rounded-lg border text-xs text-gray-700 space-y-1">
-      <p class="font-bold">🏦 CBE: <span class="font-mono text-tbkoNavy">1000123456789</span></p>
-      <p class="font-bold">📲 Telebirr: <span class="font-mono text-tbkoNavy">0911223344</span></p>
-      <p class="text-[10px] text-gray-500">ስም: tibko WEAR</p>
-    </div>
-
-    <div>
-      <label class="block text-xs font-bold text-tbkoNavy mb-1">
-        የክፍያ ደረሰኝ (Screenshot) <span id="receiptRequiredTag" class="text-red-500">*</span>
-      </label>
-      <input type="file" id="receiptInput" accept="image/*" class="w-full text-xs text-gray-500 border rounded-lg p-2 bg-slate-50">
-    </div>
-  </div>
-
-  <!-- Submit Button -->
-  <button id="submitBtn" onclick="confirmOrder()" class="w-full bg-tbkoNavy hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl shadow-lg transition">
-    ትዕዛዝ አረጋግጥ (Submit Order) 🚀
-  </button>
 
   <script>
-    // 1. Firebase & ImgBB Configuration
+    // ImgBB API Key
     const IMGBB_API_KEY = "80c60dbefb464422c2ac7c852bf5c9fc";
+
+    // Firebase Realtime Database Config
     const firebaseConfig = {
       apiKey: "AIzaSyCwU7g2s-xRCG3VsipwlqoA5F5R6oPcNdM",
       authDomain: "tibko-wear.firebaseapp.com",
       databaseURL: "https://tibko-wear-default-rtdb.firebaseio.com",
       projectId: "tibko-wear",
-      storageBucket: "tibko-wear.firebasestorage.app",
       messagingSenderId: "596607988947",
       appId: "1:596607988947:web:c9e27c89d063c97492502"
     };
@@ -168,264 +214,354 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Generate Order ID (#TBK-XXXX)
-    const randomNum = Math.floor(1000 + Math.random() * 9000);
-    const currentOrderId = `#TBK-${randomNum}`;
-    document.getElementById('orderIdTag').innerText = currentOrderId;
-
-    let pendingCustomOrder = null;
-    let catalogSelectedItem = null;
-    let CATALOG_UNIT_PRICE = 800; 
-
-    // Initialize Telegram WebApp SDK
-    let tgUser = null;
-    let tgChatId = null;
-
-    if (window.Telegram && window.Telegram.WebApp) {
-      window.Telegram.WebApp.ready();
-      tgUser = window.Telegram.WebApp.initDataUnsafe?.user || null;
-      tgChatId = tgUser?.id || null;
+    function checkPass() {
+      const pass = document.getElementById('adminPass').value;
+      if (pass === "tbko123") {
+        document.getElementById('loginOverlay').classList.add('hidden');
+      } else {
+        alert("የተሳሳተ የይለፍ ቃል ነው!");
+      }
     }
 
-    // Load Order Data & Auto-fill Username on Page Load
-    window.onload = function() {
-      if (tgUser && tgUser.username) {
-        document.getElementById('tgUsername').value = `@${tgUser.username}`;
-      }
-
-      const savedCustomData = localStorage.getItem('tbko_pending_order');
-      if (savedCustomData) {
-        pendingCustomOrder = JSON.parse(savedCustomData);
-        if (pendingCustomOrder.phone) {
-          document.getElementById('phone').value = pendingCustomOrder.phone;
-        }
-        document.getElementById('catalogQtySection').classList.add('hidden');
-      } else {
-        const savedCatalogData = localStorage.getItem('tbko_catalog_item');
-        if (savedCatalogData) {
-          catalogSelectedItem = JSON.parse(savedCatalogData);
-          if (catalogSelectedItem.unitPrice) {
-            CATALOG_UNIT_PRICE = Number(catalogSelectedItem.unitPrice);
-          }
-        }
-      }
-      calculatePrices();
-    };
-
-    function handleDeliveryChange() {
-      const selectedOption = document.querySelector('input[name="deliveryOption"]:checked').value;
-      const pickupSection = document.getElementById('pickupBranchSection');
-      const deliverySection = document.getElementById('deliveryLocationSection');
-
-      if (selectedOption === 'Pickup') {
-        pickupSection.classList.remove('hidden');
-        deliverySection.classList.add('hidden');
-      } else {
-        pickupSection.classList.add('hidden');
-        deliverySection.classList.remove('hidden');
-      }
-      calculatePrices();
+    function openImageModal(url) {
+      document.getElementById('modalImage').src = url;
+      document.getElementById('modalDownloadLink').href = url;
+      document.getElementById('imageModal').classList.remove('hidden');
     }
 
-    function calculatePrices() {
-      const selectedDelivery = document.querySelector('input[name="deliveryOption"]:checked').value;
-      let deliveryFee = 0;
-
-      if (selectedDelivery === 'Delivery') {
-        const zoneSelect = document.getElementById('deliveryZone');
-        const selectedOption = zoneSelect.options[zoneSelect.selectedIndex];
-        deliveryFee = parseInt(selectedOption.getAttribute('data-fee')) || 0;
-      }
-
-      document.getElementById('deliveryFee').innerText = deliveryFee + " ETB";
-
-      let itemsTotal = 0;
-      let requiredAdvance = 0;
-      let note = "";
-      const receiptTag = document.getElementById('receiptRequiredTag');
-
-      if (pendingCustomOrder) {
-        // Custom Order Logic (50% Advance)
-        itemsTotal = Number(pendingCustomOrder.totalAmount || 0);
-        requiredAdvance = (itemsTotal * 0.50) + deliveryFee;
-        note = "ℹ️ ለCustom ዲዛይን 50% ቅድመ ክፍያ + የትራንስፖርት ክፍያ መከፈል አለበት።";
-        if (receiptTag) receiptTag.innerText = "*";
-      } else {
-        // Catalog Order Logic
-        const qtyInput = document.getElementById('catalogQty');
-        let qty = parseInt(qtyInput.value) || 1;
-        if (qty < 1) {
-          qty = 1;
-          qtyInput.value = 1;
-        }
-
-        itemsTotal = qty * CATALOG_UNIT_PRICE;
-
-        if (qty === 1) {
-          requiredAdvance = 0;
-          note = "💡 ለ 1 እቃ ቅድመ ክፍያ (ቀብድ) መክፈልና ደረሰኝ ማያያዝ አይጠበቅብዎትም! እቃውን ሲረከቡ ሙሉ ሂሳቡን መክፈል ይችላሉ።";
-          if (receiptTag) receiptTag.innerText = "(ምርጫዊ)";
-        } else {
-          requiredAdvance = Math.round(itemsTotal * 0.30) + deliveryFee;
-          note = "ℹ️ ለ 2 እና ከዚያ በላይ እቃዎች 30% ቅድመ ክፍያ + የትራንስፖርት ክፍያ ይፈለጋል።";
-          if (receiptTag) receiptTag.innerText = "*";
-        }
-      }
-
-      const grandTotal = itemsTotal + deliveryFee;
-
-      document.getElementById('itemsTotal').innerText = itemsTotal + " ETB";
-      document.getElementById('grandTotal').innerText = grandTotal + " ETB";
-      document.getElementById('requiredAdvanceText').innerText = requiredAdvance + " ETB";
-      document.getElementById('advanceRuleNote').innerText = note;
+    function closeImageModal() {
+      document.getElementById('imageModal').classList.add('hidden');
     }
 
-    async function confirmOrder() {
-      const phone = document.getElementById('phone').value.trim();
-      let tgUsernameInput = document.getElementById('tgUsername').value.trim();
-      const receiptInput = document.getElementById('receiptInput');
+    // Switch between Products and Orders Tabs
+    function switchTab(tab) {
+      const prodSec = document.getElementById('productsSection');
+      const orderSec = document.getElementById('ordersSection');
+      const prodBtn = document.getElementById('tabProductsBtn');
+      const orderBtn = document.getElementById('tabOrdersBtn');
 
-      if (!phone) {
-        alert("እባክዎን ስልክ ቁጥርዎን ያስገቡ!");
-        return;
-      }
-
-      if (!tgUsernameInput) {
-        alert("እባክዎን የቴሌግራም ዩዘርኔምዎን ያስገቡ!");
-        return;
-      }
-
-      const cleanUsername = tgUsernameInput.replace('@', '');
-      if (!tgUsernameInput.startsWith('@')) {
-        tgUsernameInput = '@' + tgUsernameInput;
-      }
-
-      const catalogQty = parseInt(document.getElementById('catalogQty')?.value || "1");
-      const isReceiptMandatory = pendingCustomOrder || catalogQty > 1;
-
-      if (isReceiptMandatory && receiptInput.files.length === 0) {
-        alert("ለዚህ ትዕዛዝ የክፍያ ደረሰኝ (Screenshot) ማያያዝ ግዴታ ነው!");
-        return;
-      }
-
-      const btn = document.getElementById('submitBtn');
-      btn.disabled = true;
-      btn.innerText = "ትዕዛዝ በመላክ ላይ... ⏳";
-
-      const selectedDelivery = document.querySelector('input[name="deliveryOption"]:checked').value;
-      let locationDetails = {};
-
-      if (selectedDelivery === 'Pickup') {
-        locationDetails = {
-          method: "Pickup",
-          branch: document.getElementById('pickupBranch').value
-        };
+      if (tab === 'products') {
+        prodSec.classList.remove('hidden');
+        orderSec.classList.add('hidden');
+        prodBtn.className = "flex-1 py-2 rounded-lg bg-tibkoNavy text-white transition font-bold";
+        orderBtn.className = "flex-1 py-2 rounded-lg text-gray-600 hover:bg-slate-100 transition font-bold flex items-center justify-center gap-1";
       } else {
-        const address = document.getElementById('deliveryAddress').value.trim();
-        if (!address) {
-          alert("እባክዎን የመላኪያ አድራሻዎን ያስገቡ!");
-          btn.disabled = false;
-          btn.innerText = "ትዕዛዝ አረጋግጥ (Submit Order) 🚀";
+        prodSec.classList.add('hidden');
+        orderSec.classList.remove('hidden');
+        orderBtn.className = "flex-1 py-2 rounded-lg bg-tibkoNavy text-white transition font-bold flex items-center justify-center gap-1";
+        prodBtn.className = "flex-1 py-2 rounded-lg text-gray-600 hover:bg-slate-100 transition font-bold";
+      }
+    }
+
+    // Upload image to ImgBB
+    async function uploadToImgBB(file) {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        return data.data.url;
+      } else {
+        throw new Error(data.error.message || "Upload አልተሳካም።");
+      }
+    }
+
+    async function saveProduct(e) {
+      e.preventDefault();
+      
+      const key = document.getElementById('editKey').value;
+      const fileInput = document.getElementById('imageFile');
+      const currentImageUrl = document.getElementById('currentImageUrl').value;
+      const submitBtnText = document.getElementById('submitBtnText');
+      
+      let imageUrl = currentImageUrl;
+
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        submitBtnText.innerText = "ፎቶው እየተጫነ ነው...";
+        
+        try {
+          imageUrl = await uploadToImgBB(file);
+        } catch (err) {
+          alert("ፎቶውን መጫን አልተቻለም፦ " + err.message);
+          submitBtnText.innerText = key ? "ለውጦቹን አስቀምጥ (Update)" : "ዕቃውን ለጥፍ (Upload Product)";
           return;
         }
-        const zoneSelect = document.getElementById('deliveryZone');
-        locationDetails = {
-          method: "Delivery",
-          zone: zoneSelect.options[zoneSelect.selectedIndex].text,
-          address: address
-        };
       }
 
-      try {
-        let receiptUrl = "";
+      if (!imageUrl) {
+        alert("እባክዎን የቲሸርቱን ፎቶ ይምረጡ!");
+        return;
+      }
 
-        // 1. Upload Receipt to ImgBB only if image is selected
-        if (receiptInput.files.length > 0) {
-          const file = receiptInput.files[0];
-          const base64Image = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result.split(',')[1]);
-            reader.onerror = error => reject(error);
-            reader.readAsDataURL(file);
-          });
+      const sizes = Array.from(document.querySelectorAll('.size-checkbox:checked')).map(cb => cb.value);
+      const colors = document.getElementById('colors').value.split(',').map(c => c.trim()).filter(c => c);
 
-          const formData = new FormData();
-          formData.append("image", base64Image);
+      const tagValue = document.getElementById('tag').value;
+      let tagColor = "bg-tibkoGold";
+      if (tagValue === "HOT") tagColor = "bg-tibkoRust";
 
-          const imgRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-            method: "POST",
-            body: formData
-          });
-          
-          const imgData = await imgRes.json();
+      const productData = {
+        title: document.getElementById('title').value,
+        category: document.getElementById('category').value,
+        price: Number(document.getElementById('price').value),
+        image: imageUrl,
+        sizes: sizes,
+        colors: colors,
+        tag: tagValue,
+        tagColor: tagColor,
+        subtitle: document.getElementById('subtitle').value
+      };
 
-          if (!imgData.success) {
-            throw new Error(imgData.error?.message || "የደረሰኝ ፎቶ መጫን አልተቻለም።");
+      if (key) {
+        db.ref('products/' + key).update(productData)
+          .then(() => {
+            alert("ምርቱ በተሳካ ሁኔታ ተስተካክሏል!");
+            resetForm();
+          })
+          .catch(err => alert("ስህተት ተፈጥሯል፦ " + err.message));
+      } else {
+        productData.createdAt = Date.now();
+        db.ref('products').push(productData)
+          .then(() => {
+            alert("ምርቱ በተሳካ ሁኔታ ተለጥፏል!");
+            resetForm();
+          })
+          .catch(err => alert("ስህተት ተፈጥሯል፦ " + err.message));
+      }
+    }
+
+    function editProduct(key, item) {
+      document.getElementById('editKey').value = key;
+      document.getElementById('title').value = item.title || '';
+      document.getElementById('category').value = item.category || 'casual';
+      document.getElementById('price').value = item.price || '';
+      document.getElementById('currentImageUrl').value = item.image || '';
+      document.getElementById('colors').value = item.colors ? item.colors.join(', ') : '';
+      document.getElementById('subtitle').value = item.subtitle || '';
+      document.getElementById('tag').value = item.tag || '';
+
+      if (item.image) {
+        document.getElementById('previewImg').src = item.image;
+        document.getElementById('imagePreview').classList.remove('hidden');
+      }
+
+      document.querySelectorAll('.size-checkbox').forEach(cb => {
+        cb.checked = item.sizes ? item.sizes.includes(cb.value) : false;
+      });
+
+      document.getElementById('formTitle').innerHTML = "<span>✏️</span> ምርት ማስተካከያ";
+      document.getElementById('submitBtnText').innerText = "ለውጦቹን አስቀምጥ (Update)";
+      document.getElementById('submitBtn').classList.replace('bg-tibkoRust', 'bg-blue-600');
+      document.getElementById('cancelBtn').classList.remove('hidden');
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetForm() {
+      document.getElementById('addProductForm').reset();
+      document.getElementById('editKey').value = '';
+      document.getElementById('currentImageUrl').value = '';
+      document.getElementById('imagePreview').classList.add('hidden');
+      document.getElementById('formTitle').innerHTML = "<span>➕</span> አዲስ ቲሸርት መዝግብ";
+      document.getElementById('submitBtnText').innerText = "ዕቃውን ለጥፍ (Upload Product)";
+      document.getElementById('submitBtn').classList.replace('bg-blue-600', 'bg-tibkoRust');
+      document.getElementById('cancelBtn').classList.add('hidden');
+    }
+
+    // Fetch Live Products
+    db.ref('products').on('value', snapshot => {
+      const listContainer = document.getElementById('adminProductList');
+      listContainer.innerHTML = '';
+
+      const data = snapshot.val();
+      if (!data) {
+        listContainer.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">ምንም የተመዘገበ ዕቃ የለም።</p>';
+        return;
+      }
+
+      Object.keys(data).forEach(key => {
+        const item = data[key];
+        const itemDiv = document.createElement('div');
+        itemDiv.className = "flex items-center justify-between border-b pb-2 text-xs";
+        
+        const itemJson = JSON.stringify(item).replace(/'/g, "&apos;");
+
+        itemDiv.innerHTML = `
+          <div class="flex items-center space-x-2">
+            <img src="${item.image}" class="w-10 h-10 object-cover rounded cursor-pointer" onclick="openImageModal('${item.image}')">
+            <div>
+              <p class="font-bold text-tibkoNavy">${item.title}</p>
+              <p class="text-gray-500">${item.price} ETB | ${item.category}</p>
+            </div>
+          </div>
+          <div class="flex space-x-1">
+            <button onclick='editProduct("${key}", ${itemJson})' class="bg-blue-50 text-blue-600 px-2.5 py-1 rounded font-bold hover:bg-blue-100">
+              ✏️ አርም
+            </button>
+            <button onclick="deleteProduct('${key}')" class="bg-red-50 text-red-600 px-2.5 py-1 rounded font-bold hover:bg-red-100">
+              🗑️ አጥፋ
+            </button>
+          </div>
+        `;
+        listContainer.appendChild(itemDiv);
+      });
+    });
+
+    function deleteProduct(key) {
+      if (confirm("እርግጠኛ ነህ ይህንን ዕቃ ማጥፋት ትፈልጋለህ?")) {
+        db.ref('products/' + key).remove();
+      }
+    }
+
+    // Fetch Live Orders Realtime
+    db.ref('orders').on('value', snapshot => {
+      const ordersContainer = document.getElementById('adminOrdersList');
+      const badge = document.getElementById('ordersCountBadge');
+      ordersContainer.innerHTML = '';
+
+      const data = snapshot.val();
+      if (!data) {
+        ordersContainer.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">ምንም የገባ ትዕዛዝ የለም።</p>';
+        badge.classList.add('hidden');
+        return;
+      }
+
+      const orderKeys = Object.keys(data).reverse();
+      badge.innerText = orderKeys.length;
+      badge.classList.remove('hidden');
+
+      orderKeys.forEach(key => {
+        const order = data[key];
+        const cleanUsername = order.telegramUser ? order.telegramUser.replace('@', '') : '';
+        const isApproved = order.status === "Approved";
+
+        const orderCard = document.createElement('div');
+        orderCard.className = `p-3 rounded-xl border text-xs space-y-2 ${isApproved ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-200'}`;
+
+        let itemTitle = order.orderDetails?.productTitle || "Custom Order";
+        let qtyText = order.orderDetails?.qty ? `(ብዛት፦ ${order.orderDetails.qty})` : "";
+        let hasReceipt = order.receiptImage && order.receiptImage.startsWith('http');
+
+        orderCard.innerHTML = `
+          <div class="flex justify-between items-center border-b pb-2">
+            <span class="font-bold text-tibkoNavy font-mono">${order.orderId || '#TBK-'+key}</span>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 text-[10px] rounded-full font-bold ${isApproved ? 'bg-green-600 text-white' : 'bg-amber-500 text-white'}">
+                ${order.status || 'Pending'}
+              </span>
+              <button onclick="deleteSingleOrder('${key}')" title="ትዕዛዝ አጥፋ" class="text-red-500 hover:text-red-700 text-xs font-bold px-1">
+                🗑️
+              </button>
+            </div>
+          </div>
+
+          <div class="space-y-1 text-gray-700">
+            <p><strong class="text-tibkoNavy">ዕቃ፦</strong> ${itemTitle} ${qtyText}</p>
+            <p><strong class="text-tibkoNavy">ስልክ፦</strong> <a href="tel:${order.phone}" class="underline font-mono text-blue-600">${order.phone}</a></p>
+            <p><strong class="text-tibkoNavy">Telegram፦</strong> <a href="https://t.me/${cleanUsername}" target="_blank" class="underline font-bold text-tibkoRust">${order.telegramUser}</a></p>
+            <p><strong class="text-tibkoNavy">ቦታ፦</strong> ${order.deliveryInfo?.method === 'Pickup' ? 'ከሱቅ እወስዳለሁ ('+order.deliveryInfo.branch+')' : order.deliveryInfo?.zone + ' - ' + order.deliveryInfo?.address}</p>
+            <p><strong class="text-tibkoNavy">ጠቅላላ ሂሳብ፦</strong> <span class="font-bold text-tibkoNavy">${order.grandTotal}</span> | ቀብድ፦ <span class="font-bold text-tibkoRust">${order.requiredAdvance}</span></p>
+          </div>
+
+          ${hasReceipt ? `
+            <div class="pt-1">
+              <button onclick="openImageModal('${order.receiptImage}')" class="text-[11px] text-blue-600 font-bold underline flex items-center gap-1">
+                🖼️ የክፍያ ደረሰኝ (Screenshot) ተመልከት
+              </button>
+            </div>
+          ` : '<p class="text-[10px] text-gray-400 italic">ደረሰኝ አልተያያዘም</p>'}
+
+          <div class="pt-2 border-t flex flex-col gap-1.5">
+            <button onclick="sendMsg1('${cleanUsername}')" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-1.5 rounded-lg text-[11px] transition">
+              📩 መልእክት 1 ላክ ("ትንሽ ይታገሱ...")
+            </button>
+
+            <button onclick="approveOrder('${key}', '${cleanUsername}', '${order.orderId || key}')" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 rounded-lg text-[11px] transition">
+              ✅ Approve አድርግ & መልእክት 2 ላክ
+            </button>
+          </div>
+        `;
+
+        ordersContainer.appendChild(orderCard);
+      });
+    });
+
+    // Send Message 1
+    function sendMsg1(username) {
+      if (!username) {
+        alert("የደንበኛው ቴሌግራም ዩዘርኔም አልተገኘም!");
+        return;
+      }
+      const text = encodeURIComponent("ሰላም! 👋 ከ tibko WEAR ነው። ትዕዛዝዎ ደርሶናል፤ ትንሽ ይታገሱ ትዕዛዝዎ ክትትል ላይ ነው። ⏳");
+      window.open(`https://t.me/${username}?text=${text}`, '_blank');
+    }
+
+    // Approve Order & Send Message 2
+    function approveOrder(key, username, orderId) {
+      db.ref('orders/' + key).update({
+        status: "Approved",
+        approvedAt: Date.now()
+      }).then(() => {
+        alert(`ትዕዛዝ ${orderId} በተሳካ ሁኔታ Approve ሆኗል!`);
+        if (username) {
+          const text = encodeURIComponent(`ሰላም! 👋 ከ tibko WEAR ነው።\n\nትዕዛዝዎ በተሳካ ሁኔታ ተቀባይነት አግኝቶ ታዟል! 🎉\n🆔 የማዘዣ ቁጥርዎ፦ ${orderId}\n\nስለመረጡን እናመሰግናለን! 👕✨`);
+          window.open(`https://t.me/${username}?text=${text}`, '_blank');
+        }
+      }).catch(err => {
+        alert("ስህተት ተፈጥሯል፦ " + err.message);
+      });
+    }
+
+    // Delete Single Order
+    function deleteSingleOrder(key) {
+      if (confirm("እርግጠኛ ነህ ይህንን ትዕዛዝ ማጥፋት ትፈልጋለህ?")) {
+        db.ref('orders/' + key).remove()
+          .then(() => alert("ትዕዛዙ ተሰርዟል!"))
+          .catch(err => alert("ስህተት፦ " + err.message));
+      }
+    }
+
+    // Clear Only Approved Orders
+    function clearApprovedOrders() {
+      db.ref('orders').once('value', snapshot => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        let deletedCount = 0;
+        const updates = {};
+
+        Object.keys(data).forEach(key => {
+          if (data[key].status === "Approved") {
+            updates[key] = null;
+            deletedCount++;
           }
+        });
 
-          receiptUrl = imgData.data.url;
+        if (deletedCount === 0) {
+          alert("ምንም Approved የሆነ የተስተናገደ ትዕዛዝ አልተገኘም!");
+          return;
         }
 
-        // 2. Build Payload
-        const payload = {
-          orderId: currentOrderId,
-          orderType: pendingCustomOrder ? "CUSTOM_ORDER" : "CATALOG_ORDER",
-          phone: phone,
-          telegramUser: tgUsernameInput,
-          chatId: tgChatId,
-          deliveryInfo: locationDetails,
-          itemsTotal: document.getElementById('itemsTotal').innerText,
-          deliveryFee: document.getElementById('deliveryFee').innerText,
-          grandTotal: document.getElementById('grandTotal').innerText,
-          requiredAdvance: document.getElementById('requiredAdvanceText').innerText,
-          receiptImage: receiptUrl || "ያልተያያዘ (በብዛት 1 ወይም በቆይታ የሚከፈል)",
-          status: "Pending",
-          timestamp: Date.now(),
-          orderDetails: pendingCustomOrder ? pendingCustomOrder : {
-            productTitle: catalogSelectedItem ? catalogSelectedItem.title : "Catalog T-Shirt",
-            qty: catalogQty,
-            unitPrice: CATALOG_UNIT_PRICE
-          }
-        };
-
-        // 3. Save Order to Firebase Database
-        const cleanOrderId = currentOrderId.replace('#', '');
-        await db.ref('orders/' + cleanOrderId).set(payload);
-
-        alert(`ትዕዛዝዎ በስኬት ተልኳል!\nትዕዛዝ ቁጥር፦ ${currentOrderId}`);
-
-        // 4. Safe Send Data to Telegram WebApp
-        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
-          try {
-            window.Telegram.WebApp.sendData(JSON.stringify(payload));
-          } catch (e) {
-            console.log("sendData ignored or failed safely:", e);
-          }
+        if (confirm(`እርግጠኛ ነህ ${deletedCount} Approved የሆኑ ትዕዛዞችን ማፅዳት ትፈልጋለህ?`)) {
+          db.ref('orders').update(updates)
+            .then(() => alert(`${deletedCount} የተስተናገዱ ትዕዛዞች በስኬት ጸድተዋል!`))
+            .catch(err => alert("ስህተት፦ " + err.message));
         }
+      });
+    }
 
-        // 5. Automatical Message 1 Redirect directly to User's Telegram
-        const autoMsgText = encodeURIComponent(`ሰላም! 👋 ከ tibko WEAR ነው። ትዕዛዝዎ ደርሶናል፤ ትንሽ ይታገሱ ትዕዛዝዎ ክትትል ላይ ነው። ⏳\n\n🆔 ትዕዛዝ ቁጥር፦ ${currentOrderId}\n💰 ጠቅላላ ሂሳብ፦ ${payload.grandTotal}`);
-        const tgDirectUrl = `https://t.me/${cleanUsername}?text=${autoMsgText}`;
-
-        // Clear Local Storage
-        localStorage.removeItem('tbko_pending_order');
-        localStorage.removeItem('tbko_catalog_item');
-
-        // Redirect user automatically to their chat/Telegram link
-        window.open(tgDirectUrl, '_blank');
-
-        // Close WebApp or Redirect to catalog
-        if (window.Telegram && window.Telegram.WebApp) {
-          window.Telegram.WebApp.close();
-        } else {
-          window.location.href = "index.html";
-        }
-
-      } catch (err) {
-        console.error("Error submitting order:", err);
-        alert("ችግር አጋጥሟል፦ " + err.message);
-        btn.disabled = false;
-        btn.innerText = "ትዕዛዝ አረጋግጥ (Submit Order) 🚀";
+    // Delete All Orders
+    function deleteAllOrders() {
+      if (confirm("⚠️ ማስጠንቀቂያ፦ ሁሉንም ትዕዛዞች ማፅዳት ትፈልጋለህ? ይህ ድርጊት አይመለስም!")) {
+        db.ref('orders').remove()
+          .then(() => alert("ሁሉም ትዕዛዞች በስኬት ጸድተዋል!"))
+          .catch(err => alert("ስህተት፦ " + err.message));
       }
     }
   </script>
