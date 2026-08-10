@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "title": "Classic Black Tee",
+    "category": "casual",
+    "price": 800,
+    "tag": "NEW",
+    "tagColor": "bg-tbkoGold",
+    "subtitle": "100% Pure Cotton",
+    "image": "https://via.placeholder.com/150/1D3B6A/FFFFFF?text=Black+Tee"
+  },
+  {
+    "id": 2,
+    "title": "White Minimal Tee",
+    "category": "casual",
+    "price": 750,
+    "tag": "",
+    "tagColor": "",
+    "subtitle": "Soft Heavyweight",
+    "image": "https://via.placeholder.com/150/555555/FFFFFF?text=White+Tee"
+  },
+  {
+    "id": 3,
+    "title": "Navy Blue Polo",
+    "category": "polo",
+    "price": 1100,
+    "tag": "HOT",
+    "tagColor": "bg-tbkoRust",
+    "subtitle": "Collared Smart Fit",
+    "image": "https://via.placeholder.com/150/1D3B6A/FFFFFF?text=Navy+Polo"
+  },
+  {
+    "id": 4,
+    "title": "Premium Polo",
+    "category": "polo",
+    "price": 1250,
+    "tag": "",
+    "tagColor": "",
+    "subtitle": "Breathable Fabric",
+    "image": "https://via.placeholder.com/150/B85C28/FFFFFF?text=Red+Polo"
+  },
+  {
+    "id": 5,
+    "title": "Cultural Art Tee",
+    "category": "cultural",
+    "price": 1200,
+    "tag": "HOT",
+    "tagColor": "bg-tbkoRust",
+    "subtitle": "Traditional Design",
+    "image": "https://via.placeholder.com/150/D6923E/FFFFFF?text=Cultural+Art"
+  },
+  {
+    "id": 6,
+    "title": "Habesha Pattern Tee",
+    "category": "cultural",
+    "price": 1350,
+    "tag": "POPULAR",
+    "tagColor": "bg-tbkoGold",
+    "subtitle": "Unique Neck Embroidery",
+    "image": "https://via.placeholder.com/150/1D3B6A/FFFFFF?text=Habesha+Pattern"
+  }
+]
