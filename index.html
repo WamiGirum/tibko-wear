@@ -10,6 +10,10 @@
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   
+  <!-- Firebase Compatibility SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
   <script>
     tailwind.config = {
       theme: {
@@ -30,7 +34,6 @@
   <!-- Header with Logo Image and Text -->
   <header class="bg-tbkoNavy text-white p-3 sticky top-0 z-50 flex justify-between items-center shadow-md">
     <div class="flex items-center space-x-3">
-      <!-- ሎጎው እዚህ ገብቷል -->
       <img src="Tibko logo.jpg" alt="Tibko Logo" class="h-10 w-auto bg-white p-1 rounded-lg object-contain shadow-sm">
       <div>
         <h1 class="text-base font-bold tracking-wider leading-none">TBKO WEAR</h1>
@@ -38,7 +41,6 @@
       </div>
     </div>
     <div class="relative">
-      <!-- ወደ checkout.html የሚወስድ ሊንክ -->
       <a href="checkout.html" class="bg-tbkoRust p-2 rounded-full text-white font-bold text-sm inline-block shadow">
         🛒 <span id="cartCount" class="bg-white text-tbkoNavy text-xs px-1.5 py-0.5 rounded-full font-bold">0</span>
       </a>
@@ -50,7 +52,6 @@
     <div>
       <h2 class="font-bold text-lg">የራስዎን ዲዛይን ያትሙ!</h2>
       <p class="text-xs text-gray-300">ምስል ወይም ፅሁፍ በመላክ ብጁ ቲሸርት ይዘዙ</p>
-      <!-- ወደ custom.html የሚወስድ ሊንክ -->
       <a href="custom.html" class="inline-block mt-3 bg-tbkoRust hover:bg-orange-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition shadow">
         Custom Order ➔
       </a>
@@ -58,9 +59,9 @@
     <div class="text-4xl">🎨</div>
   </div>
 
-  <!-- Categories Filter (Single Page Navigation) -->
+  <!-- Categories Filter -->
   <div class="flex space-x-2 px-4 overflow-x-auto py-2" id="categoryButtons">
-    <button onclick="filterCategory('all', this)" class="cat-btn active-cat bg-tbkoNavy text-white text-xs font-medium px-4 py-2 rounded-full whitespace-nowrap shadow-sm">
+    <button onclick="filterCategory('all', this)" class="cat-btn bg-tbkoNavy text-white text-xs font-medium px-4 py-2 rounded-full whitespace-nowrap shadow-sm">
       ሁሉም
     </button>
     <button onclick="filterCategory('casual', this)" class="cat-btn bg-white text-tbkoNavy border border-tbkoNavy text-xs font-medium px-4 py-2 rounded-full whitespace-nowrap shadow-sm">
@@ -76,7 +77,7 @@
 
   <!-- Dynamic Product Grid -->
   <div class="p-4 grid grid-cols-2 gap-4" id="productGrid">
-    <!-- Products will load dynamically from products.json -->
+    <p class="col-span-2 text-center text-xs text-gray-400 py-6">ምርቶችን በመጫን ላይ... ⏳</p>
   </div>
 
   <!-- JavaScript Logic -->
@@ -87,61 +88,72 @@
       window.Telegram.WebApp.expand();
     }
 
-    // 2. Dynamic Fetch and Render Products
-    async function fetchProducts() {
+    // 2. Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCwU7g2s-xRCG3VsipwlqoA5F5R6oPcNdM",
+      authDomain: "tibko-wear.firebaseapp.com",
+      databaseURL: "https://tibko-wear-default-rtdb.firebaseio.com",
+      projectId: "tibko-wear",
+      storageBucket: "tibko-wear.firebasestorage.app",
+      messagingSenderId: "596607988947",
+      appId: "1:596607988947:web:c9e27c89d063c97492502"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // 3. Realtime Fetch Products from Firebase Database
+    db.ref('products').on('value', snapshot => {
       const grid = document.getElementById('productGrid');
-      try {
-        const response = await fetch('products.json');
-        if (!response.ok) throw new Error("ለማንበብ አልተቻለም");
-        
-        const products = await response.json();
-        grid.innerHTML = '';
+      grid.innerHTML = '';
 
-        products.forEach(product => {
-          const productDiv = document.createElement('div');
-          productDiv.className = `product-item ${product.category} bg-white rounded-xl shadow border border-gray-100 overflow-hidden flex flex-col justify-between`;
-          
-          const tagHTML = product.tag ? `<span class="absolute top-2 left-2 ${product.tagColor || 'bg-tbkoGold'} text-white text-[10px] font-bold px-2 py-0.5 rounded">${product.tag}</span>` : '';
-
-          productDiv.innerHTML = `
-            <div class="relative">
-              ${tagHTML}
-              <img src="${product.image}" alt="${product.title}" class="w-full h-40 object-cover">
-            </div>
-            <div class="p-3">
-              <h3 class="font-bold text-tbkoNavy text-sm">${product.title}</h3>
-              <p class="text-xs text-gray-500 my-1">${product.subtitle || ''}</p>
-              <div class="flex justify-between items-center mt-2">
-                <span class="font-extrabold text-tbkoRust text-sm">${product.price.toLocaleString()} ETB</span>
-                <button onclick="addToCart('${product.id}', '${product.title}', ${product.price})" class="bg-tbkoNavy text-white text-xs px-2.5 py-1.5 rounded-lg hover:bg-blue-900 shadow">+ Add</button>
-              </div>
-            </div>
-          `;
-          grid.appendChild(productDiv);
-        });
-
-      } catch (error) {
-        console.error("Error loading products:", error);
-        grid.innerHTML = `<p class="col-span-2 text-center text-xs text-red-500 py-6">ምርቶችን መጫን አልተቻለም።</p>`;
+      const data = snapshot.val();
+      if (!data) {
+        grid.innerHTML = '<p class="col-span-2 text-center text-xs text-gray-400 py-6">ምንም የተመዘገበ ምርት የለም።</p>';
+        return;
       }
-    }
 
-    // 3. Category Filter Logic
+      Object.keys(data).forEach(key => {
+        const product = data[key];
+        const productDiv = document.createElement('div');
+        productDiv.className = `product-item ${product.category || 'casual'} bg-white rounded-xl shadow border border-gray-100 overflow-hidden flex flex-col justify-between`;
+        
+        const tagHTML = product.tag ? `<span class="absolute top-2 left-2 ${product.tagColor || 'bg-tbkoGold'} text-white text-[10px] font-bold px-2 py-0.5 rounded">${product.tag}</span>` : '';
+
+        productDiv.innerHTML = `
+          <div class="relative">
+            ${tagHTML}
+            <img src="${product.image}" alt="${product.title}" class="w-full h-40 object-cover">
+          </div>
+          <div class="p-3">
+            <h3 class="font-bold text-tbkoNavy text-sm">${product.title}</h3>
+            <p class="text-xs text-gray-500 my-1">${product.subtitle || ''}</p>
+            <div class="flex justify-between items-center mt-2">
+              <span class="font-extrabold text-tbkoRust text-sm">${Number(product.price).toLocaleString()} ETB</span>
+              <button onclick="addToCart('${key}', '${product.title}', ${product.price})" class="bg-tbkoNavy text-white text-xs px-2.5 py-1.5 rounded-lg hover:bg-blue-900 shadow">+ Add</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(productDiv);
+      });
+    }, error => {
+      console.error("Error loading products:", error);
+      document.getElementById('productGrid').innerHTML = '<p class="col-span-2 text-center text-xs text-red-500 py-6">ምርቶችን መጫን አልተቻለም።</p>';
+    });
+
+    // 4. Category Filter Logic
     function filterCategory(category, clickedBtn) {
       const items = document.querySelectorAll('.product-item');
       const buttons = document.querySelectorAll('.cat-btn');
 
-      // Style resetting for category buttons
       buttons.forEach(btn => {
         btn.classList.remove('bg-tbkoNavy', 'text-white');
         btn.classList.add('bg-white', 'text-tbkoNavy', 'border', 'border-tbkoNavy');
       });
 
-      // Highlight selected button
       clickedBtn.classList.remove('bg-white', 'text-tbkoNavy', 'border', 'border-tbkoNavy');
       clickedBtn.classList.add('bg-tbkoNavy', 'text-white');
 
-      // Show/Hide Products
       items.forEach(item => {
         if (category === 'all' || item.classList.contains(category)) {
           item.style.display = 'flex';
@@ -151,13 +163,12 @@
       });
     }
 
-    // 4. Cart Counter & Storage Logic
+    // 5. Cart Counter & Storage Logic
     let cartCount = 0;
     function addToCart(id, title, price) {
       cartCount++;
       document.getElementById('cartCount').innerText = cartCount;
 
-      // Save product details to localStorage for checkout
       const selectedProduct = {
         isCustom: false,
         productId: id,
@@ -166,9 +177,6 @@
       };
       localStorage.setItem('tbko_catalog_item', JSON.stringify(selectedProduct));
     }
-
-    // Load products on window startup
-    window.onload = fetchProducts;
   </script>
 
 </body>
