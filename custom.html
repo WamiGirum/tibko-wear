@@ -100,8 +100,10 @@
   </form>
 
   <script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) tg.ready();
+
     const UNIT_PRICE = 1200; // Custom T-shirt base price
-    const IMGBB_API_KEY = "f8da64ef6dbca33ee35805ef6ec421e4";
 
     function showFileName() {
       const fileInput = document.getElementById('fileInput');
@@ -138,50 +140,51 @@
       const btn = event.currentTarget;
       const originalContent = btn.innerHTML;
       btn.disabled = true;
-      btn.innerHTML = "<span>ዲዛይኑ እየተጫነ ነው... ⏳</span>";
+      btn.innerHTML = "<span>መረጃው እየተዘጋጀ ነው... ⏳</span>";
 
       try {
-        // 1. ዲዛይኑን ወደ ImgBB መጫን
         const file = fileInput.files[0];
-        const formData = new FormData();
-        formData.append("image", file);
+        const reader = new FileReader();
 
-        const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-          method: "POST",
-          body: formData
-        });
-        const data = await response.json();
+        reader.onload = function(e) {
+          const designBase64 = e.target.result;
+          const qty = parseInt(document.getElementById('qty').value) || 1;
+          const totalAmount = qty * UNIT_PRICE;
+          const requiredAdvance = totalAmount * 0.50;
 
-        let designUrl = "";
-        if (data.success) {
-          designUrl = data.data.url;
-        } else {
-          throw new Error("የዲዛይን ፎቶውን መጫን አልተቻለም።");
-        }
+          const customOrderData = {
+            isCustom: true,
+            phone: phone,
+            fileName: file.name,
+            designImage: designBase64,
+            description: document.getElementById('desc').value,
+            size: document.getElementById('size').value,
+            qty: qty,
+            unitPrice: UNIT_PRICE,
+            totalAmount: totalAmount,
+            advancePercentage: 50,
+            requiredAdvance: requiredAdvance
+          };
 
-        const qty = parseInt(document.getElementById('qty').value) || 1;
-        const totalAmount = qty * UNIT_PRICE;
-        const requiredAdvance = totalAmount * 0.50;
+          const orderJson = JSON.stringify(customOrderData);
 
-        // 2. መረጃውን ከነ ፎቶ ሊንኩ ማስቀመጥ
-        const customOrderData = {
-          isCustom: true,
-          phone: phone,
-          fileName: file.name,
-          designImage: designUrl,
-          description: document.getElementById('desc').value,
-          size: document.getElementById('size').value,
-          qty: qty,
-          unitPrice: UNIT_PRICE,
-          totalAmount: totalAmount,
-          advancePercentage: 50,
-          requiredAdvance: requiredAdvance
+          // 1. በ Telegram CloudStorage ላይ ማስቀመጥ
+          if (tg && tg.CloudStorage) {
+            tg.CloudStorage.setItem('tbko_pending_order', orderJson, (err, success) => {
+              if (err) {
+                // CloudStorage ባይሰራ ወደ localStorage እንደ አማራጭ (Fallback) መጠቀም
+                localStorage.setItem('tbko_pending_order', orderJson);
+              }
+              window.location.href = "checkout.html";
+            });
+          } else {
+            // በቴሌግራም ውጭ ከሆነ በ localStorage ማስቀመጥ
+            localStorage.setItem('tbko_pending_order', orderJson);
+            window.location.href = "checkout.html";
+          }
         };
 
-        localStorage.setItem('tbko_pending_order', JSON.stringify(customOrderData));
-
-        // 3. ወደ Checkout መሸጋገር
-        window.location.href = "checkout.html";
+        reader.readAsDataURL(file);
 
       } catch (err) {
         alert("ስህተት፦ " + err.message);
