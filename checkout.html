@@ -378,6 +378,14 @@
           grandTotal: document.getElementById('grandTotal').innerText,
           requiredAdvance: document.getElementById('requiredAdvanceText').innerText,
           receiptImage: receiptUrl || "ያልተያያዘ (በብዛት 1 ወይም በቆይታ የሚከፈል)",
+          receiptSubmitted: !!receiptUrl,
+          paymentStatus: receiptUrl ? "RECEIPT_SUBMITTED_PENDING_APPROVAL" : "PAYMENT_PENDING",
+          customerMessage: receiptUrl
+            ? "የክፍያ ደረሰኝዎ ከትዕዛዝዎ ጋር ተያይዞ ተልኳል። እባክዎን Approval እስኪደረግ ትንሽ ይጠብቁ።"
+            : "ትዕዛዝዎ ተልኳል።",
+          adminMessage: receiptUrl
+            ? "የክፍያ ደረሰኝ (File) ከትዕዛዙ ጋር ተልኳል።"
+            : "አዲስ ትዕዛዝ ተልኳል።",
           status: "Pending",
           timestamp: Date.now(),
           orderDetails: pendingCustomOrder ? pendingCustomOrder : {
@@ -398,6 +406,8 @@
         // Safe Send Data to Telegram WebApp SDK if available
         if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
           try {
+            // The bot receives this payload through Telegram's web_app_data update.
+            // The bot can then notify the customer and forward the receipt URL/file to admin.
             window.Telegram.WebApp.sendData(JSON.stringify(payload));
           } catch (e) {
             console.log("sendData ignored or failed safely:", e);
