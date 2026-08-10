@@ -27,23 +27,33 @@
   <a href="index.html" class="text-sm text-tbkoNavy font-bold mb-4 inline-block">← ወደ ካታሎግ ተመለስ</a>
 
   <h2 class="text-xl font-bold text-tbkoNavy mb-1">ብጁ ትዕዛዝ (Custom Design)</h2>
-  <p class="text-xs text-gray-600 mb-4">ቲሸርት ላይ እንዲታተም የሚፈልጉትን ዲዛይን (ምስል ወይም PDF) ያያይዙ</p>
+  <p class="text-xs text-gray-600 mb-3">ቲሸርት ላይ እንዲታተም የሚፈልጉትን ዲዛይን (ምስል ወይም PDF) ያያይዙ</p>
+
+  <!-- 50% Advance Notice Banner -->
+  <div class="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs mb-4 font-medium flex items-center space-x-2">
+    <span class="text-base">⚠️</span>
+    <span>ማሳሰቢያ፦ ለብጁ (Custom) ትዕዛዞች <strong>50% ቅድመ ክፍያ (ቀብድ)</strong> መክፈል ግዴታ ነው።</span>
+  </div>
 
   <form id="customForm" class="space-y-4">
     
+    <!-- Phone Number Input -->
+    <div class="bg-white p-4 rounded-xl shadow-sm border">
+      <label class="block text-xs font-bold text-tbkoNavy mb-1">ስልክ ቁጥር <span class="text-red-500">*</span></label>
+      <input type="tel" id="phone" placeholder="0912345678" class="w-full text-xs p-3 border rounded-lg focus:outline-none focus:border-tbkoNavy font-semibold" required>
+    </div>
+
     <!-- File Upload Area -->
     <div class="border-2 border-dashed border-tbkoNavy/40 bg-white p-6 rounded-xl text-center">
       <div class="text-4xl mb-2">📁</div>
       <p class="text-xs font-semibold text-tbkoNavy">ምስል ወይም PDF ፋይል ይምረጡ</p>
       <p class="text-[10px] text-gray-400 mt-1">PNG, JPG, PDF (Up to 10MB)</p>
 
-      <!-- HTML File Input -->
       <input type="file" id="fileInput" accept=".png, .jpg, .jpeg, .pdf" class="hidden" onchange="showFileName()">
       <label for="fileInput" class="inline-block mt-3 bg-tbkoNavy text-white text-xs px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition">
         ፋይል ፈልግ (Browse)
       </label>
 
-      <!-- Selected File Display -->
       <p id="fileNameDisplay" class="text-xs text-tbkoRust font-bold mt-3 hidden"></p>
     </div>
 
@@ -66,53 +76,89 @@
       </div>
       <div>
         <label class="block text-xs font-bold text-tbkoNavy mb-1">ብዛት (Qty)</label>
-        <input id="qty" type="number" value="1" min="1" class="w-full text-xs p-2.5 border rounded-lg">
+        <input id="qty" type="number" value="1" min="1" class="w-full text-xs p-2.5 border rounded-lg" onchange="calculateCustomEstimate()">
       </div>
     </div>
 
-    <!-- Submit Button -->
-    <button type="button" onclick="submitCustomOrder()" class="w-full bg-tbkoRust hover:bg-orange-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition">
-      ትዕዛዝ ላክ (Submit)
+    <!-- Live Estimate Box -->
+    <div class="bg-white p-3 rounded-xl border border-gray-200 text-xs space-y-1">
+      <div class="flex justify-between text-gray-600">
+        <span>ግምታዊ ጠቅላላ ዋጋ:</span>
+        <span id="customTotal" class="font-bold text-tbkoNavy">1,200 ETB</span>
+      </div>
+      <div class="flex justify-between text-tbkoRust font-bold">
+        <span>የሚፈለግ ቅድመ ክፍያ (50%):</span>
+        <span id="customAdvance">600 ETB</span>
+      </div>
+    </div>
+
+    <!-- Next / Proceed Button -->
+    <button type="button" onclick="proceedToCheckout()" class="w-full bg-tbkoRust hover:bg-orange-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition flex justify-center items-center space-x-2">
+      <span>ወደ ክፍያ ቀጥል (Proceed to Checkout)</span>
+      <span>➔</span>
     </button>
   </form>
 
   <script>
-    // 1. Show Selected File Name
+    const UNIT_PRICE = 1200; // Custom T-shirt base price
+
     function showFileName() {
       const fileInput = document.getElementById('fileInput');
       const display = document.getElementById('fileNameDisplay');
-      
       if (fileInput.files.length > 0) {
         display.innerText = "📌 የተመረጠ ፋይል: " + fileInput.files[0].name;
         display.classList.remove('hidden');
       }
     }
 
-    // 2. Submit Data
-    function submitCustomOrder() {
+    function calculateCustomEstimate() {
+      const qty = parseInt(document.getElementById('qty').value) || 1;
+      const total = qty * UNIT_PRICE;
+      const advance = total * 0.50;
+
+      document.getElementById('customTotal').innerText = total + " ETB";
+      document.getElementById('customAdvance').innerText = advance + " ETB";
+    }
+
+    function proceedToCheckout() {
+      const phone = document.getElementById('phone').value.trim();
       const fileInput = document.getElementById('fileInput');
       
-      if (fileInput.files.length === 0) {
-        alert("እባክዎን አስቀድመው ዲዛይን (ምስል ወይም PDF) ይምረጡ!");
+      if (!phone) {
+        alert("እባክዎን ስልክ ቁጥርዎን ያስገቡ!");
         return;
       }
 
-      const selectedFile = fileInput.files[0];
-      const data = {
-        type: "CUSTOM_ORDER",
-        fileName: selectedFile.name,
-        fileType: selectedFile.type,
+      if (fileInput.files.length === 0) {
+        alert("እባክዎን ዲዛይን (ምስል ወይም PDF) ይምረጡ!");
+        return;
+      }
+
+      const qty = parseInt(document.getElementById('qty').value) || 1;
+      const totalAmount = qty * UNIT_PRICE;
+      const requiredAdvance = totalAmount * 0.50;
+
+      // Save custom order details to localStorage
+      const customOrderData = {
+        isCustom: true,
+        phone: phone,
+        fileName: fileInput.files[0].name,
         description: document.getElementById('desc').value,
         size: document.getElementById('size').value,
-        qty: document.getElementById('qty').value
+        qty: qty,
+        unitPrice: UNIT_PRICE,
+        totalAmount: totalAmount,
+        advancePercentage: 50,
+        requiredAdvance: requiredAdvance
       };
-      
-      if (window.Telegram && window.Telegram.WebApp) {
-        window.Telegram.WebApp.sendData(JSON.stringify(data));
-      } else {
-        alert("ትዕዛዝዎ ተልኳል!");
-      }
+
+      localStorage.setItem('tbko_pending_order', JSON.stringify(customOrderData));
+
+      // Redirect directly to checkout.html
+      window.location.href = "checkout.html";
     }
+
+    calculateCustomEstimate();
   </script>
 </body>
 </html>
