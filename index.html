@@ -74,106 +74,12 @@
     </button>
   </div>
 
-  <!-- Product Grid -->
+  <!-- Dynamic Product Grid -->
   <div class="p-4 grid grid-cols-2 gap-4" id="productGrid">
-    
-    <!-- 1. Casual Tee (Sample 1) -->
-    <div class="product-item casual bg-white rounded-xl shadow border border-gray-100 overflow-hidden flex flex-col justify-between">
-      <div class="relative">
-        <span class="absolute top-2 left-2 bg-tbkoGold text-white text-[10px] font-bold px-2 py-0.5 rounded">NEW</span>
-        <img src="https://via.placeholder.com/150/1D3B6A/FFFFFF?text=Black+Tee" alt="T-Shirt" class="w-full h-40 object-cover">
-      </div>
-      <div class="p-3">
-        <h3 class="font-bold text-tbkoNavy text-sm">Classic Black Tee</h3>
-        <p class="text-xs text-gray-500 my-1">100% Pure Cotton</p>
-        <div class="flex justify-between items-center mt-2">
-          <span class="font-extrabold text-tbkoRust text-sm">800 ETB</span>
-          <button onclick="addToCart()" class="bg-tbkoNavy text-white text-xs px-2.5 py-1.5 rounded-lg hover:bg-blue-900 shadow">+ Add</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 2. Casual Tee (Sample 2) -->
-    <div class="product-item casual bg-white rounded-xl shadow border border-gray-100 overflow-hidden flex flex-col justify-between">
-      <div class="relative">
-        <img src="https://via.placeholder.com/150/555555/FFFFFF?text=White+Tee" alt="T-Shirt" class="w-full h-40 object-cover">
-      </div>
-      <div class="p-3">
-        <h3 class="font-bold text-tbkoNavy text-sm">White Minimal Tee</h3>
-        <p class="text-xs text-gray-500 my-1">Soft Heavyweight</p>
-        <div class="flex justify-between items-center mt-2">
-          <span class="font-extrabold text-tbkoRust text-sm">750 ETB</span>
-          <button onclick="addToCart()" class="bg-tbkoNavy text-white text-xs px-2.5 py-1.5 rounded-lg hover:bg-blue-900 shadow">+ Add</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 3. Polo Tee (Sample 1) -->
-    <div class="product-item polo bg-white rounded-xl shadow border border-gray-100 overflow-hidden flex flex-col justify-between">
-      <div class="relative">
-        <span class="absolute top-2 left-2 bg-tbkoRust text-white text-[10px] font-bold px-2 py-0.5 rounded">HOT</span>
-        <img src="https://via.placeholder.com/150/1D3B6A/FFFFFF?text=Navy+Polo" alt="Polo" class="w-full h-40 object-cover">
-      </div>
-      <div class="p-3">
-        <h3 class="font-bold text-tbkoNavy text-sm">Navy Blue Polo</h3>
-        <p class="text-xs text-gray-500 my-1">Collared Smart Fit</p>
-        <div class="flex justify-between items-center mt-2">
-          <span class="font-extrabold text-tbkoRust text-sm">1,100 ETB</span>
-          <button onclick="addToCart()" class="bg-tbkoNavy text-white text-xs px-2.5 py-1.5 rounded-lg hover:bg-blue-900 shadow">+ Add</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 4. Polo Tee (Sample 2) -->
-    <div class="product-item polo bg-white rounded-xl shadow border border-gray-100 overflow-hidden flex flex-col justify-between">
-      <div class="relative">
-        <img src="https://via.placeholder.com/150/B85C28/FFFFFF?text=Red+Polo" alt="Polo" class="w-full h-40 object-cover">
-      </div>
-      <div class="p-3">
-        <h3 class="font-bold text-tbkoNavy text-sm">Premium Polo</h3>
-        <p class="text-xs text-gray-500 my-1">Breathable Fabric</p>
-        <div class="flex justify-between items-center mt-2">
-          <span class="font-extrabold text-tbkoRust text-sm">1,250 ETB</span>
-          <button onclick="addToCart()" class="bg-tbkoNavy text-white text-xs px-2.5 py-1.5 rounded-lg hover:bg-blue-900 shadow">+ Add</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 5. Cultural Print (Sample 1) -->
-    <div class="product-item cultural bg-white rounded-xl shadow border border-gray-100 overflow-hidden flex flex-col justify-between">
-      <div class="relative">
-        <span class="absolute top-2 left-2 bg-tbkoRust text-white text-[10px] font-bold px-2 py-0.5 rounded">HOT</span>
-        <img src="https://via.placeholder.com/150/D6923E/FFFFFF?text=Cultural+Art" alt="Cultural" class="w-full h-40 object-cover">
-      </div>
-      <div class="p-3">
-        <h3 class="font-bold text-tbkoNavy text-sm">Cultural Art Tee</h3>
-        <p class="text-xs text-gray-500 my-1">Traditional Design</p>
-        <div class="flex justify-between items-center mt-2">
-          <span class="font-extrabold text-tbkoRust text-sm">1,200 ETB</span>
-          <button onclick="addToCart()" class="bg-tbkoNavy text-white text-xs px-2.5 py-1.5 rounded-lg hover:bg-blue-900 shadow">+ Add</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 6. Cultural Print (Sample 2) -->
-    <div class="product-item cultural bg-white rounded-xl shadow border border-gray-100 overflow-hidden flex flex-col justify-between">
-      <div class="relative">
-        <span class="absolute top-2 left-2 bg-tbkoGold text-white text-[10px] font-bold px-2 py-0.5 rounded">POPULAR</span>
-        <img src="https://via.placeholder.com/150/1D3B6A/FFFFFF?text=Habesha+Pattern" alt="Cultural" class="w-full h-40 object-cover">
-      </div>
-      <div class="p-3">
-        <h3 class="font-bold text-tbkoNavy text-sm">Habesha Pattern Tee</h3>
-        <p class="text-xs text-gray-500 my-1">Unique Neck Embroidery</p>
-        <div class="flex justify-between items-center mt-2">
-          <span class="font-extrabold text-tbkoRust text-sm">1,350 ETB</span>
-          <button onclick="addToCart()" class="bg-tbkoNavy text-white text-xs px-2.5 py-1.5 rounded-lg hover:bg-blue-900 shadow">+ Add</button>
-        </div>
-      </div>
-    </div>
-
+    <!-- Products will load dynamically from products.json -->
   </div>
 
-  <!-- JavaScript for Single Page Category Filtering & Cart Counter -->
+  <!-- JavaScript Logic -->
   <script>
     // 1. Initialize Telegram WebApp
     if (window.Telegram && window.Telegram.WebApp) {
@@ -181,7 +87,46 @@
       window.Telegram.WebApp.expand();
     }
 
-    // 2. Category Filter Logic
+    // 2. Dynamic Fetch and Render Products
+    async function fetchProducts() {
+      const grid = document.getElementById('productGrid');
+      try {
+        const response = await fetch('products.json');
+        if (!response.ok) throw new Error("ለማንበብ አልተቻለም");
+        
+        const products = await response.json();
+        grid.innerHTML = '';
+
+        products.forEach(product => {
+          const productDiv = document.createElement('div');
+          productDiv.className = `product-item ${product.category} bg-white rounded-xl shadow border border-gray-100 overflow-hidden flex flex-col justify-between`;
+          
+          const tagHTML = product.tag ? `<span class="absolute top-2 left-2 ${product.tagColor || 'bg-tbkoGold'} text-white text-[10px] font-bold px-2 py-0.5 rounded">${product.tag}</span>` : '';
+
+          productDiv.innerHTML = `
+            <div class="relative">
+              ${tagHTML}
+              <img src="${product.image}" alt="${product.title}" class="w-full h-40 object-cover">
+            </div>
+            <div class="p-3">
+              <h3 class="font-bold text-tbkoNavy text-sm">${product.title}</h3>
+              <p class="text-xs text-gray-500 my-1">${product.subtitle || ''}</p>
+              <div class="flex justify-between items-center mt-2">
+                <span class="font-extrabold text-tbkoRust text-sm">${product.price.toLocaleString()} ETB</span>
+                <button onclick="addToCart('${product.id}', '${product.title}', ${product.price})" class="bg-tbkoNavy text-white text-xs px-2.5 py-1.5 rounded-lg hover:bg-blue-900 shadow">+ Add</button>
+              </div>
+            </div>
+          `;
+          grid.appendChild(productDiv);
+        });
+
+      } catch (error) {
+        console.error("Error loading products:", error);
+        grid.innerHTML = `<p class="col-span-2 text-center text-xs text-red-500 py-6">ምርቶችን መጫን አልተቻለም።</p>`;
+      }
+    }
+
+    // 3. Category Filter Logic
     function filterCategory(category, clickedBtn) {
       const items = document.querySelectorAll('.product-item');
       const buttons = document.querySelectorAll('.cat-btn');
@@ -206,12 +151,24 @@
       });
     }
 
-    // 3. Simple Cart Counter Logic
+    // 4. Cart Counter & Storage Logic
     let cartCount = 0;
-    function addToCart() {
+    function addToCart(id, title, price) {
       cartCount++;
       document.getElementById('cartCount').innerText = cartCount;
+
+      // Save product details to localStorage for checkout
+      const selectedProduct = {
+        isCustom: false,
+        productId: id,
+        title: title,
+        unitPrice: price
+      };
+      localStorage.setItem('tbko_catalog_item', JSON.stringify(selectedProduct));
     }
+
+    // Load products on window startup
+    window.onload = fetchProducts;
   </script>
 
 </body>
