@@ -39,6 +39,31 @@
 
   <h2 class="text-xl font-bold text-tbkoNavy mb-2">ትዕዛዝ አረጋግጥ & ክፍያ</h2>
 
+  <!-- Telegram Bot Connect Banner (Highly Visible & Interactive) -->
+  <div id="telegramConnectBox" class="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-tbkoNavy/40 p-3.5 rounded-xl mb-4 flex items-center justify-between shadow-md relative overflow-hidden transition-all duration-300">
+    
+    <!-- Glowing background accent -->
+    <div class="absolute -right-4 -top-4 w-12 h-12 bg-tbkoGold/20 rounded-full blur-xl"></div>
+
+    <div class="flex items-center space-x-3 z-10">
+      <span class="text-2xl animate-bounce">📲</span>
+      <div>
+        <p class="text-xs font-extrabold text-tbkoNavy flex items-center gap-1">
+          የትዕዛዝ ክትትል ማስታወቂያ 
+          <span class="inline-block w-2 h-2 rounded-full bg-green-500 animate-ping"></span>
+        </p>
+        <p class="text-[10px] text-gray-700 font-bold mt-0.5">
+          ⚠️ ማሳሰቢያ፦ በትዕዛዝዎ ላይ ለውጥ ሲኖር መልእክት እንዲደርስዎ ቦቱን ያያይዙ!
+        </p>
+      </div>
+    </div>
+
+    <a id="telegramConnectBtn" href="https://t.me/tibkowear_bot" target="_blank" onclick="markBotClicked()" class="z-10 bg-tbkoNavy hover:bg-slate-800 text-white text-xs font-extrabold px-3.5 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95 flex items-center space-x-1 ring-2 ring-tbkoGold/50 whitespace-nowrap">
+      <span>ቦት አያይዝ</span>
+      <span class="text-sm">👉</span>
+    </a>
+  </div>
+
   <!-- Contact Info Section (Phone & Telegram Username) -->
   <div class="bg-white p-4 rounded-xl shadow-sm border mb-4 space-y-3">
     <div>
@@ -179,6 +204,18 @@
     let catalogSelectedItem = null;
     let CATALOG_UNIT_PRICE = 800; 
 
+    // Bot connection tracking
+    let isBotConnectedClicked = false;
+
+    function markBotClicked() {
+      isBotConnectedClicked = true;
+      const box = document.getElementById('telegramConnectBox');
+      if (box) {
+        box.classList.remove('border-red-400', 'bg-red-50');
+        box.classList.add('border-green-400', 'bg-green-50');
+      }
+    }
+
     // Initialize Telegram WebApp SDK
     let tgUser = null;
     let tgChatId = null;
@@ -189,10 +226,18 @@
       tgChatId = tgUser?.id || null;
     }
 
-    // Load Order Data & Auto-fill Username on Page Load
+    // Load Order Data & Auto-fill Username / Deep Link on Page Load
     window.onload = function() {
-      if (tgUser && tgUser.username) {
-        document.getElementById('tgUsername').value = `@${tgUser.username}`;
+      if (tgUser) {
+        if (tgUser.username) {
+          document.getElementById('tgUsername').value = `@${tgUser.username}`;
+        }
+        // Telegram Deep Link ማዘጋጀት
+        const botUsername = "tibkowear_bot";
+        const connectBtn = document.getElementById('telegramConnectBtn');
+        if (connectBtn) {
+          connectBtn.href = `https://t.me/${botUsername}?start=${tgUser.id}`;
+        }
       }
 
       const savedCustomData = localStorage.getItem('tbko_pending_order');
@@ -247,13 +292,11 @@
       const receiptTag = document.getElementById('receiptRequiredTag');
 
       if (pendingCustomOrder) {
-        // Custom Order Logic (50% Advance)
         itemsTotal = Number(pendingCustomOrder.totalAmount || 0);
         requiredAdvance = (itemsTotal * 0.50) + deliveryFee;
         note = "ℹ️ ለCustom ዲዛይን 50% ቅድመ ክፍያ + የትራንስፖርት ክፍያ መከፈል አለበት።";
         if (receiptTag) receiptTag.innerText = "*";
       } else {
-        // Catalog Order Logic
         const qtyInput = document.getElementById('catalogQty');
         let qty = parseInt(qtyInput.value) || 1;
         if (qty < 1) {
@@ -283,6 +326,17 @@
     }
 
     async function confirmOrder() {
+      // 0. Bot Link Verification Check
+      if (!isBotConnectedClicked) {
+        alert("⚠️ ማሳሰቢያ፦ መጀመሪያ ከላይ ያለውን 'ቦት አያይዝ ⚡' የሚለውን አዝራር ተጭነው ቦቱን ማስነሳት አለብዎት!");
+        const box = document.getElementById('telegramConnectBox');
+        if (box) {
+          box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          box.classList.add('border-red-400', 'bg-red-50');
+        }
+        return;
+      }
+
       const phone = document.getElementById('phone').value.trim();
       let tgUsernameInput = document.getElementById('tgUsername').value.trim();
       const receiptInput = document.getElementById('receiptInput');
@@ -341,7 +395,7 @@
       try {
         let receiptUrl = "";
 
-        // 1. Upload Receipt to ImgBB only if image is selected
+        // 1. Upload Receipt to ImgBB
         if (receiptInput.files.length > 0) {
           const file = receiptInput.files[0];
           const base64Image = await new Promise((resolve, reject) => {
