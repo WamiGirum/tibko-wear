@@ -5,255 +5,139 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TBKO WEAR - Admin Panel</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
   <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            tbkoNavy: '#1D3B6A',
-            tbkoRust: '#B85C28',
-            tbkoGold: '#D6923E'
-          }
-        }
-      }
-    }
+    tailwind.config = { theme: { extend: { colors: { tbkoNavy: '#1D3B6A', tbkoRust: '#B85C28', tbkoGold: '#D6923E' } } } }
   </script>
 </head>
 <body class="bg-slate-100 text-gray-800 font-sans pb-12 p-4">
 
-  <!-- Password Overlay -->
   <div id="loginOverlay" class="fixed inset-0 bg-tbkoNavy z-50 flex items-center justify-center p-4">
     <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm text-center">
       <h2 class="text-xl font-bold text-tbkoNavy mb-2">TBKO Admin Login</h2>
-      <p class="text-xs text-gray-500 mb-4">ለመቀጠል የይለፍ ቃል ያስገቡ</p>
       <input type="password" id="adminPass" placeholder="Password" class="w-full border p-2.5 rounded-lg text-center font-bold mb-3 focus:outline-none focus:ring-2 focus:ring-tbkoNavy">
       <button onclick="checkPass()" class="w-full bg-tbkoNavy text-white py-2.5 rounded-lg font-bold">ግባ (Login)</button>
     </div>
   </div>
 
   <div class="max-w-md mx-auto">
-    <!-- Header -->
     <header class="bg-tbkoNavy text-white p-4 rounded-xl shadow mb-6 flex justify-between items-center">
-      <div>
-        <h1 class="font-bold text-lg">TBKO WEAR Admin</h1>
-        <p class="text-[10px] text-tbkoGold">የዕቃዎች መቆጣጠሪያ ሰሌዳ</p>
-      </div>
+      <div><h1 class="font-bold text-lg">TBKO WEAR Admin</h1></div>
       <a href="index.html" class="bg-white/10 text-xs px-3 py-1.5 rounded-lg">ወደ ካታሎግ ➔</a>
     </header>
 
-    <!-- Add Product Form -->
     <div class="bg-white p-4 rounded-xl shadow mb-6 border">
-      <h2 class="font-bold text-tbkoNavy mb-3 text-sm flex items-center gap-1">
-        <span>➕</span> አዲስ ቲሸርት መዝግብ
-      </h2>
-
+      <h2 id="formTitle" class="font-bold text-tbkoNavy mb-3 text-sm">➕ አዲስ ቲሸርት መዝግብ</h2>
       <form id="addProductForm" onsubmit="saveProduct(event)" class="space-y-3">
-        <div>
-          <label class="text-xs font-bold text-gray-600 block mb-1">የቲሸርቱ ስም</label>
-          <input type="text" id="title" required placeholder="ex: TBKO Oversized Rust" class="w-full border p-2 rounded-lg text-xs">
-        </div>
-
+        <input type="hidden" id="editKey">
+        <div><label class="text-xs font-bold text-gray-600">የቲሸርቱ ስም</label><input type="text" id="title" required class="w-full border p-2 rounded-lg text-xs"></div>
         <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="text-xs font-bold text-gray-600 block mb-1">ካቴጎሪ</label>
-            <select id="category" class="w-full border p-2 rounded-lg text-xs bg-white">
-              <option value="casual">Casual Tees</option>
-              <option value="polo">Polo</option>
-              <option value="cultural">Cultural Prints</option>
-            </select>
-          </div>
-          <div>
-            <label class="text-xs font-bold text-gray-600 block mb-1">ዋጋ (ETB)</label>
-            <input type="number" id="price" required placeholder="800" class="w-full border p-2 rounded-lg text-xs">
-          </div>
+          <div><label class="text-xs font-bold text-gray-600">ካቴጎሪ</label><select id="category" class="w-full border p-2 rounded-lg text-xs bg-white"><option value="casual">Casual Tees</option><option value="polo">Polo</option><option value="cultural">Cultural Prints</option></select></div>
+          <div><label class="text-xs font-bold text-gray-600">ዋጋ (ETB)</label><input type="number" id="price" required class="w-full border p-2 rounded-lg text-xs"></div>
         </div>
-
-        <!-- Direct Image Upload From Phone -->
-        <div>
-          <label class="text-xs font-bold text-gray-600 block mb-1">የቲሸርቱን ፎቶ ከስልክህ ምረጥ</label>
-          <input type="file" id="imageFile" accept="image/*" required class="w-full border p-1.5 rounded-lg text-xs bg-gray-50">
-          <p class="text-[10px] text-gray-400 mt-0.5">ከስልክህ ጋለሪ ፎቶ መምረጥ ትችላለህ</p>
-        </div>
-
-        <!-- Sizes Selection -->
-        <div>
-          <label class="text-xs font-bold text-gray-600 block mb-1">ያሉ መጠኖች (Sizes)</label>
+        <div><label class="text-xs font-bold text-gray-600">የፎቶ URL</label><input type="url" id="image" required class="w-full border p-2 rounded-lg text-xs"></div>
+        
+        <div><label class="text-xs font-bold text-gray-600 block mb-1">ያሉ መጠኖች</label>
           <div class="flex flex-wrap gap-2 text-xs">
-            <label class="flex items-center space-x-1 bg-gray-50 px-2 py-1 rounded border">
-              <input type="checkbox" value="S" class="size-checkbox"> <span>S</span>
-            </label>
-            <label class="flex items-center space-x-1 bg-gray-50 px-2 py-1 rounded border">
-              <input type="checkbox" value="M" class="size-checkbox" checked> <span>M</span>
-            </label>
-            <label class="flex items-center space-x-1 bg-gray-50 px-2 py-1 rounded border">
-              <input type="checkbox" value="L" class="size-checkbox" checked> <span>L</span>
-            </label>
-            <label class="flex items-center space-x-1 bg-gray-50 px-2 py-1 rounded border">
-              <input type="checkbox" value="XL" class="size-checkbox" checked> <span>XL</span>
-            </label>
-            <label class="flex items-center space-x-1 bg-gray-50 px-2 py-1 rounded border">
-              <input type="checkbox" value="XXL" class="size-checkbox"> <span>XXL</span>
-            </label>
+            <label><input type="checkbox" value="S" class="size-checkbox"> S</label>
+            <label><input type="checkbox" value="M" class="size-checkbox"> M</label>
+            <label><input type="checkbox" value="L" class="size-checkbox"> L</label>
+            <label><input type="checkbox" value="XL" class="size-checkbox"> XL</label>
           </div>
         </div>
-
-        <!-- Colors Selection -->
-        <div>
-          <label class="text-xs font-bold text-gray-600 block mb-1">ያሉ ቀለሞች (በኮማ ይለዩ)</label>
-          <input type="text" id="colors" placeholder="ጥቁር, ነጭ, ቡናማ" class="w-full border p-2 rounded-lg text-xs">
-        </div>
-
-        <!-- Badge Tag & Subtitle -->
+        <div><label class="text-xs font-bold text-gray-600">ቀለሞች (በኮማ)</label><input type="text" id="colors" class="w-full border p-2 rounded-lg text-xs"></div>
         <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="text-xs font-bold text-gray-600 block mb-1">ምልክት (Tag/Badge)</label>
-            <select id="tag" class="w-full border p-2 rounded-lg text-xs bg-white">
-              <option value="">ምንም</option>
-              <option value="NEW">NEW</option>
-              <option value="HOT">HOT</option>
-              <option value="POPULAR">POPULAR</option>
-            </select>
-          </div>
-          <div>
-            <label class="text-xs font-bold text-gray-600 block mb-1">አጭር መግለጫ (Subtitle)</label>
-            <input type="text" id="subtitle" placeholder="100% Pure Cotton" class="w-full border p-2 rounded-lg text-xs">
-          </div>
+          <div><label class="text-xs font-bold text-gray-600">ምልክት (Tag)</label><select id="tag" class="w-full border p-2 rounded-lg text-xs bg-white"><option value="">ምንም</option><option value="NEW">NEW</option><option value="HOT">HOT</option></select></div>
+          <div><label class="text-xs font-bold text-gray-600">አጭር መግለጫ</label><input type="text" id="subtitle" class="w-full border p-2 rounded-lg text-xs"></div>
         </div>
 
-        <button type="submit" id="submitBtn" class="w-full bg-tbkoRust text-white font-bold py-2.5 rounded-lg text-xs shadow hover:bg-orange-700 transition">
-          💾 ዕቃውን ለጥፍ (Upload Product)
-        </button>
+        <button type="submit" id="submitBtn" class="w-full bg-tbkoRust text-white font-bold py-2.5 rounded-lg text-xs shadow hover:bg-orange-700">💾 ዕቃውን ለጥፍ</button>
+        <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden w-full bg-gray-200 text-gray-700 font-bold py-2.5 rounded-lg text-xs">❌ ሰርዝ (Cancel)</button>
       </form>
     </div>
 
-    <!-- Live Products List -->
     <div class="bg-white p-4 rounded-xl shadow border">
       <h2 class="font-bold text-tbkoNavy mb-3 text-sm">📦 በካታሎግ ላይ ያሉ ዕቃዎች</h2>
-      <div id="adminProductList" class="space-y-3">
-        <p class="text-xs text-gray-400 text-center py-4">በመጫን ላይ...</p>
-      </div>
+      <div id="adminProductList" class="space-y-3"></div>
     </div>
   </div>
 
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyCwU7g2s-xRCG3VsipwlqoA5F5R6oPcNdM",
-      authDomain: "tibko-wear.firebaseapp.com",
-      databaseURL: "https://tibko-wear-default-rtdb.firebaseio.com",
-      projectId: "tibko-wear",
-      storageBucket: "tibko-wear.firebasestorage.app",
-      messagingSenderId: "596607988947",
-      appId: "1:596607988947:web:c9e27c89d063c97492502"
-    };
-
+    const firebaseConfig = { apiKey: "AIzaSyCwU7g2s-xRCG3VsipwlqoA5F5R6oPcNdM", authDomain: "tibko-wear.firebaseapp.com", databaseURL: "https://tibko-wear-default-rtdb.firebaseio.com", projectId: "tibko-wear", storageBucket: "tibko-wear.firebasestorage.app", messagingSenderId: "596607988947", appId: "1:596607988947:web:c9e27c89d063c97492502" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    function checkPass() {
-      const pass = document.getElementById('adminPass').value;
-      if (pass === "tbko123") {
-        document.getElementById('loginOverlay').classList.add('hidden');
-      } else {
-        alert("የተሳሳተ የይለፍ ቃል ነው!");
-      }
-    }
+    function checkPass() { if(document.getElementById('adminPass').value === "tbko123") document.getElementById('loginOverlay').classList.add('hidden'); else alert("የተሳሳተ የይለፍ ቃል!"); }
 
     function saveProduct(e) {
       e.preventDefault();
-      
-      const fileInput = document.getElementById('imageFile');
-      const file = fileInput.files[0];
-
-      if (!file) {
-        alert("እባክዎን ፎቶ ይምረጡ!");
-        return;
-      }
-
-      const submitBtn = document.getElementById('submitBtn');
-      submitBtn.innerText = "በመጫን ላይ... ⏳";
-      submitBtn.disabled = true;
-
-      // ፎቶውን ከስልክ አንብቦ ወደ Base64 መቀየር
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        const base64Image = event.target.result;
-
-        const sizes = Array.from(document.querySelectorAll('.size-checkbox:checked')).map(cb => cb.value);
-        const colors = document.getElementById('colors').value.split(',').map(c => c.trim()).filter(c => c);
-
-        const tagValue = document.getElementById('tag').value;
-        let tagColor = "bg-tbkoGold";
-        if (tagValue === "HOT") tagColor = "bg-tbkoRust";
-
-        const newProduct = {
-          title: document.getElementById('title').value,
-          category: document.getElementById('category').value,
-          price: Number(document.getElementById('price').value),
-          image: base64Image,
-          sizes: sizes,
-          colors: colors,
-          tag: tagValue,
-          tagColor: tagColor,
-          subtitle: document.getElementById('subtitle').value,
-          createdAt: Date.now()
-        };
-
-        db.ref('products').push(newProduct)
-          .then(() => {
-            alert("ምርቱ በተሳካ ሁኔታ ተለጥፏል!");
-            document.getElementById('addProductForm').reset();
-            submitBtn.innerText = "💾 ዕቃውን ለጥፍ (Upload Product)";
-            submitBtn.disabled = false;
-          })
-          .catch(err => {
-            alert("ስህተት ተፈጥሯል፦ " + err.message);
-            submitBtn.innerText = "💾 ዕቃውን ለጥፍ (Upload Product)";
-            submitBtn.disabled = false;
-          });
+      const key = document.getElementById('editKey').value;
+      const productData = {
+        title: document.getElementById('title').value,
+        category: document.getElementById('category').value,
+        price: Number(document.getElementById('price').value),
+        image: document.getElementById('image').value,
+        sizes: Array.from(document.querySelectorAll('.size-checkbox:checked')).map(cb => cb.value),
+        colors: document.getElementById('colors').value.split(',').map(c => c.trim()),
+        tag: document.getElementById('tag').value,
+        subtitle: document.getElementById('subtitle').value
       };
 
-      reader.readAsDataURL(file);
+      if (key) {
+        db.ref('products/' + key).update(productData).then(() => { alert("ተስተካክሏል!"); resetForm(); });
+      } else {
+        db.ref('products').push({...productData, createdAt: Date.now()}).then(() => { alert("ተጨምሯል!"); resetForm(); });
+      }
+    }
+
+    function editProduct(key, item) {
+      document.getElementById('editKey').value = key;
+      document.getElementById('title').value = item.title;
+      document.getElementById('category').value = item.category;
+      document.getElementById('price').value = item.price;
+      document.getElementById('image').value = item.image;
+      document.getElementById('colors').value = item.colors ? item.colors.join(', ') : '';
+      document.getElementById('subtitle').value = item.subtitle || '';
+      document.getElementById('tag').value = item.tag || '';
+      
+      // Sizes reset
+      document.querySelectorAll('.size-checkbox').forEach(cb => cb.checked = item.sizes ? item.sizes.includes(cb.value) : false);
+
+      document.getElementById('formTitle').innerText = "✏️ ቲሸርት ማስተካከያ";
+      document.getElementById('submitBtn').innerText = "💾 ለውጦቹን አስቀምጥ";
+      document.getElementById('cancelBtn').classList.remove('hidden');
+    }
+
+    function resetForm() {
+      document.getElementById('addProductForm').reset();
+      document.getElementById('editKey').value = '';
+      document.getElementById('formTitle').innerText = "➕ አዲስ ቲሸርት መዝግብ";
+      document.getElementById('submitBtn').innerText = "💾 ዕቃውን ለጥፍ";
+      document.getElementById('cancelBtn').classList.add('hidden');
     }
 
     db.ref('products').on('value', snapshot => {
-      const listContainer = document.getElementById('adminProductList');
-      listContainer.innerHTML = '';
-
+      const list = document.getElementById('adminProductList'); list.innerHTML = '';
       const data = snapshot.val();
-      if (!data) {
-        listContainer.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">ምንም የተመዘገበ ዕቃ የለም።</p>';
-        return;
-      }
-
+      if (!data) return;
       Object.keys(data).forEach(key => {
         const item = data[key];
-        const itemDiv = document.createElement('div');
-        itemDiv.className = "flex items-center justify-between border-b pb-2 text-xs";
-        itemDiv.innerHTML = `
-          <div class="flex items-center space-x-2">
-            <img src="${item.image}" class="w-10 h-10 object-cover rounded">
-            <div>
-              <p class="font-bold text-tbkoNavy">${item.title}</p>
-              <p class="text-gray-500">${item.price} ETB | ${item.category}</p>
-            </div>
+        const div = document.createElement('div');
+        div.className = "flex items-center justify-between border-b pb-2 text-xs";
+        div.innerHTML = `
+          <div class="flex items-center space-x-2"><img src="${item.image}" class="w-10 h-10 object-cover rounded"><div><p class="font-bold">${item.title}</p></div></div>
+          <div class="space-x-1">
+            <button onclick='editProduct("${key}", ${JSON.stringify(item)})' class="bg-blue-50 text-blue-600 px-2 py-1 rounded font-bold">✎</button>
+            <button onclick="deleteProduct('${key}')" class="bg-red-50 text-red-600 px-2 py-1 rounded font-bold">🗑️</button>
           </div>
-          <button onclick="deleteProduct('${key}')" class="bg-red-50 text-red-600 px-2 py-1 rounded font-bold hover:bg-red-100">
-            🗑️ አጥፋ
-          </button>
         `;
-        listContainer.appendChild(itemDiv);
+        list.appendChild(div);
       });
     });
 
-    function deleteProduct(key) {
-      if (confirm("እርግጠኛ ነህ ይህንን ዕቃ ማጥፋት ትፈልጋለህ?")) {
-        db.ref('products/' + key).remove();
-      }
-    }
+    function deleteProduct(key) { if(confirm("ማጥፋት ትፈልጋለህ?")) db.ref('products/' + key).remove(); }
   </script>
 </body>
 </html>
