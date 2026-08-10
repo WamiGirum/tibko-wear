@@ -126,7 +126,7 @@
         <span id="advanceRuleTitle">የሚፈለግ ቅድመ ክፍያ (ቀብድ)፦</span>
         <span id="requiredAdvanceText" class="text-tbkoRust text-sm">0 ETB</span>
       </div>
-      <p id="advanceRuleNote" class="text-[10px] text-amber-700 mt-1"></p>
+      <p id="advanceRuleNote" class="text-[10px] text-amber-700 mt-1 font-semibold"></p>
     </div>
   </div>
 
@@ -140,7 +140,9 @@
     </div>
 
     <div>
-      <label class="block text-xs font-bold text-tbkoNavy mb-1">የክፍያ ደረሰኝ (Screenshot) <span class="text-red-500">*</span></label>
+      <label class="block text-xs font-bold text-tbkoNavy mb-1">
+        የክፍያ ደረሰኝ (Screenshot) <span id="receiptRequiredTag" class="text-red-500">*</span>
+      </label>
       <input type="file" id="receiptInput" accept="image/*" class="w-full text-xs text-gray-500 border rounded-lg p-2 bg-slate-50">
     </div>
   </div>
@@ -151,7 +153,7 @@
   </button>
 
   <script>
-    // 1. Firebase & ImgBB Configuration (አዲሱ API KEY ተተክቷል)
+    // 1. Firebase & ImgBB Configuration
     const IMGBB_API_KEY = "80c60dbefb464422c2ac7c852bf5c9fc";
     const firebaseConfig = {
       apiKey: "AIzaSyCwU7g2s-xRCG3VsipwlqoA5F5R6oPcNdM",
@@ -240,21 +242,33 @@
       let itemsTotal = 0;
       let requiredAdvance = 0;
       let note = "";
+      const receiptTag = document.getElementById('receiptRequiredTag');
 
       if (pendingCustomOrder) {
+        // Custom Order Logic (50% Advance)
         itemsTotal = Number(pendingCustomOrder.totalAmount || 0);
         requiredAdvance = (itemsTotal * 0.50) + deliveryFee;
-        note = "ለCustom ዲዛይን 50% ቅድመ ክፍያ (ቀብድ) + የትራንስፖርት ክፍያ መከፈል አለበት።";
+        note = "ℹ️ ለCustom ዲዛይን 50% ቅድመ ክፍያ + የትራንስፖርት ክፍያ መከፈል አለበት።";
+        if (receiptTag) receiptTag.innerText = "*";
       } else {
-        const qty = parseInt(document.getElementById('catalogQty').value) || 1;
+        // Catalog Order Logic
+        const qtyInput = document.getElementById('catalogQty');
+        let qty = parseInt(qtyInput.value) || 1;
+        if (qty < 1) {
+          qty = 1;
+          qtyInput.value = 1;
+        }
+
         itemsTotal = qty * CATALOG_UNIT_PRICE;
 
         if (qty === 1) {
-          requiredAdvance = itemsTotal + deliveryFee;
-          note = "ለ 1 እቃ ሙሉ ክፍያ ይፈጸማል።";
+          requiredAdvance = 0;
+          note = "💡 ለ 1 እቃ ቅድመ ክፍያ (ቀብድ) መክፈልና ደረሰኝ ማያያዝ አይጠበቅብዎትም! እቃውን ሲረከቡ ሙሉ ሂሳቡን መክፈል ይችላሉ።";
+          if (receiptTag) receiptTag.innerText = "(ምርጫዊ)";
         } else {
-          requiredAdvance = (itemsTotal * 0.35) + deliveryFee;
-          note = "ለ 2 እና ከዚያ በላይ እቃዎች 35% ቅድመ ክፍያ (ቀብድ) + የትራንስፖርት ክፍያ ይበቃል።";
+          requiredAdvance = Math.round(itemsTotal * 0.30) + deliveryFee;
+          note = "ℹ️ ለ 2 እና ከዚያ በላይ እቃዎች 30% ቅድመ ክፍያ + የትራንስፖርት ክፍያ ይፈለጋል።";
+          if (receiptTag) receiptTag.innerText = "*";
         }
       }
 
@@ -285,8 +299,11 @@
         tgUsernameInput = '@' + tgUsernameInput;
       }
 
-      if (receiptInput.files.length === 0) {
-        alert("እባክዎን የክፍያ ደረሰኝ (Screenshot) ያያይዙ!");
+      const catalogQty = parseInt(document.getElementById('catalogQty')?.value || "1");
+      const isReceiptMandatory = pendingCustomOrder || catalogQty > 1;
+
+      if (isReceiptMandatory && receiptInput.files.length === 0) {
+        alert("ለዚህ ትዕዛዝ የክፍያ ደረሰኝ (Screenshot) ማያያዝ ግዴታ ነው!");
         return;
       }
 
@@ -319,31 +336,34 @@
       }
 
       try {
-        // 1. Upload Receipt to ImgBB using Base64 with URL Query Parameter
-        const file = receiptInput.files[0];
-        const base64Image = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result.split(',')[1]);
-          reader.onerror = error => reject(error);
-          reader.readAsDataURL(file);
-        });
+        let receiptUrl = "";
 
-        const formData = new FormData();
-        formData.append("image", base64Image);
+        // 1. Upload Receipt to ImgBB only if image is selected
+        if (receiptInput.files.length > 0) {
+          const file = receiptInput.files[0];
+          const base64Image = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = error => reject(error);
+            reader.readAsDataURL(file);
+          });
 
-        // API Key-ኡ በቀጥታ URL ላይ አብሮ ይላካል
-        const imgRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-          method: "POST",
-          body: formData
-        });
-        
-        const imgData = await imgRes.json();
+          const formData = new FormData();
+          formData.append("image", base64Image);
 
-        if (!imgData.success) {
-          throw new Error(imgData.error?.message || "የደረሰኝ ፎቶ መጫን አልተቻለም።");
+          const imgRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+            method: "POST",
+            body: formData
+          });
+          
+          const imgData = await imgRes.json();
+
+          if (!imgData.success) {
+            throw new Error(imgData.error?.message || "የደረሰኝ ፎቶ መጫን አልተቻለም።");
+          }
+
+          receiptUrl = imgData.data.url;
         }
-
-        const receiptUrl = imgData.data.url;
 
         // 2. Build Payload
         const payload = {
@@ -357,12 +377,12 @@
           deliveryFee: document.getElementById('deliveryFee').innerText,
           grandTotal: document.getElementById('grandTotal').innerText,
           requiredAdvance: document.getElementById('requiredAdvanceText').innerText,
-          receiptImage: receiptUrl,
+          receiptImage: receiptUrl || "ያልተያያዘ (በብዛት 1 ወይም በቆይታ የሚከፈል)",
           status: "Pending",
           timestamp: Date.now(),
           orderDetails: pendingCustomOrder ? pendingCustomOrder : {
             productTitle: catalogSelectedItem ? catalogSelectedItem.title : "Catalog T-Shirt",
-            qty: document.getElementById('catalogQty').value,
+            qty: catalogQty,
             unitPrice: CATALOG_UNIT_PRICE
           }
         };
@@ -373,9 +393,13 @@
 
         alert(`ትዕዛዝዎ በስኬት ተልኳል!\nትዕዛዝ ቁጥር፦ ${currentOrderId}`);
 
-        // 4. Send Data to Telegram Bot WebApp
+        // 4. Safe Send Data to Telegram WebApp (WebAppDataInvalid ን ለመከላከል በ try-catch ተጠብቋል)
         if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
-          window.Telegram.WebApp.sendData(JSON.stringify(payload));
+          try {
+            window.Telegram.WebApp.sendData(JSON.stringify(payload));
+          } catch (e) {
+            console.log("sendData ignored or failed safely:", e);
+          }
         }
 
         // Clear Local Storage
