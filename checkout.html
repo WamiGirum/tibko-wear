@@ -39,31 +39,6 @@
 
   <h2 class="text-xl font-bold text-tbkoNavy mb-2">ትዕዛዝ አረጋግጥ & ክፍያ</h2>
 
-  <!-- Telegram Bot Connect Banner (Highly Visible & Interactive) -->
-  <div id="telegramConnectBox" class="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-tbkoNavy/40 p-3.5 rounded-xl mb-4 flex items-center justify-between shadow-md relative overflow-hidden transition-all duration-300">
-    
-    <!-- Glowing background accent -->
-    <div class="absolute -right-4 -top-4 w-12 h-12 bg-tbkoGold/20 rounded-full blur-xl"></div>
-
-    <div class="flex items-center space-x-3 z-10">
-      <span class="text-2xl animate-bounce">📲</span>
-      <div>
-        <p class="text-xs font-extrabold text-tbkoNavy flex items-center gap-1">
-          የትዕዛዝ ክትትል ማስታወቂያ 
-          <span class="inline-block w-2 h-2 rounded-full bg-green-500 animate-ping"></span>
-        </p>
-        <p class="text-[10px] text-gray-700 font-bold mt-0.5">
-          ⚠️ ማሳሰቢያ፦ በትዕዛዝዎ ላይ ለውጥ ሲኖር መልእክት እንዲደርስዎ ቦቱን ያያይዙ!
-        </p>
-      </div>
-    </div>
-
-    <a id="telegramConnectBtn" href="https://t.me/tibkowear_bot" target="_blank" onclick="markBotClicked()" class="z-10 bg-tbkoNavy hover:bg-slate-800 text-white text-xs font-extrabold px-3.5 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95 flex items-center space-x-1 ring-2 ring-tbkoGold/50 whitespace-nowrap">
-      <span>ቦት አያይዝ</span>
-      <span class="text-sm">👉</span>
-    </a>
-  </div>
-
   <!-- Contact Info Section (Phone & Telegram Username) -->
   <div class="bg-white p-4 rounded-xl shadow-sm border mb-4 space-y-3">
     <div>
@@ -172,7 +147,7 @@
     </div>
   </div>
 
-  <!-- Submit Button & Telegram Direct Link Action -->
+  <!-- Submit Button -->
   <div id="actionContainer">
     <button id="submitBtn" onclick="confirmOrder()" class="w-full bg-tbkoNavy hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl shadow-lg transition">
       ትዕዛዝ አረጋግጥ (Submit Order) 🚀
@@ -204,18 +179,6 @@
     let catalogSelectedItem = null;
     let CATALOG_UNIT_PRICE = 800; 
 
-    // Bot connection tracking
-    let isBotConnectedClicked = false;
-
-    function markBotClicked() {
-      isBotConnectedClicked = true;
-      const box = document.getElementById('telegramConnectBox');
-      if (box) {
-        box.classList.remove('border-red-400', 'bg-red-50');
-        box.classList.add('border-green-400', 'bg-green-50');
-      }
-    }
-
     // Initialize Telegram WebApp SDK
     let tgUser = null;
     let tgChatId = null;
@@ -226,18 +189,10 @@
       tgChatId = tgUser?.id || null;
     }
 
-    // Load Order Data & Auto-fill Username / Deep Link on Page Load
+    // Load Order Data & Auto-fill Username
     window.onload = function() {
-      if (tgUser) {
-        if (tgUser.username) {
-          document.getElementById('tgUsername').value = `@${tgUser.username}`;
-        }
-        // Telegram Deep Link ማዘጋጀት
-        const botUsername = "tibkowear_bot";
-        const connectBtn = document.getElementById('telegramConnectBtn');
-        if (connectBtn) {
-          connectBtn.href = `https://t.me/${botUsername}?start=${tgUser.id}`;
-        }
+      if (tgUser && tgUser.username) {
+        document.getElementById('tgUsername').value = `@${tgUser.username}`;
       }
 
       const savedCustomData = localStorage.getItem('tbko_pending_order');
@@ -326,17 +281,6 @@
     }
 
     async function confirmOrder() {
-      // 0. Bot Link Verification Check
-      if (!isBotConnectedClicked) {
-        alert("⚠️ ማሳሰቢያ፦ መጀመሪያ ከላይ ያለውን 'ቦት አያይዝ ⚡' የሚለውን አዝራር ተጭነው ቦቱን ማስነሳት አለብዎት!");
-        const box = document.getElementById('telegramConnectBox');
-        if (box) {
-          box.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          box.classList.add('border-red-400', 'bg-red-50');
-        }
-        return;
-      }
-
       const phone = document.getElementById('phone').value.trim();
       let tgUsernameInput = document.getElementById('tgUsername').value.trim();
       const receiptInput = document.getElementById('receiptInput');
@@ -351,7 +295,6 @@
         return;
       }
 
-      const cleanUsername = tgUsernameInput.replace('@', '');
       if (!tgUsernameInput.startsWith('@')) {
         tgUsernameInput = '@' + tgUsernameInput;
       }
@@ -428,7 +371,7 @@
           orderType: pendingCustomOrder ? "CUSTOM_ORDER" : "CATALOG_ORDER",
           phone: phone,
           telegramUser: tgUsernameInput,
-          chatId: tgChatId,
+          chatId: tgChatId ? String(tgChatId) : "",
           deliveryInfo: locationDetails,
           itemsTotal: document.getElementById('itemsTotal').innerText,
           deliveryFee: document.getElementById('deliveryFee').innerText,
@@ -461,21 +404,12 @@
           }
         }
 
-        // Prepare message text for Telegram Redirect
-        const autoMsgText = encodeURIComponent(`ሰላም! 👋 ከ tibko WEAR ነው። ትዕዛዝዎ ደርሶናል፤ ትንሽ ይታገሱ ትዕዛዝዎ ክትትል ላይ ነው። ⏳\n\n🆔 ትዕዛዝ ቁጥር፦ ${currentOrderId}\n💰 ጠቅላላ ሂሳብ፦ ${payload.grandTotal}`);
-        const tgDirectUrl = `https://t.me/${cleanUsername}?text=${autoMsgText}`;
-
-        // 4. Update UI: Show direct Telegram Send Button & Notification
-        const container = document.getElementById('actionContainer');
-        container.innerHTML = `
-          <div class="bg-green-50 border border-green-200 p-4 rounded-xl mb-3 text-center">
-            <p class="text-xs font-bold text-green-800 mb-1">ትዕዛዝዎ በስኬት ተመዝግቧል! ✅</p>
-            <p class="text-[11px] text-green-700 font-medium">እባክዎን ከታች ያለውን አዝራር ተጭነው በቴሌግራም መልእክቱን "Send" በማለት ያረጋግጡ።</p>
-          </div>
-          <a href="${tgDirectUrl}" target="_blank" onclick="closeWebAppDelay()" class="w-full block text-center bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition text-sm">
-            መልእክቱን በቴሌግራም ላክ (Send Message) 📩
-          </a>
-        `;
+        // Close WebApp automatically after submission
+        if (window.Telegram && window.Telegram.WebApp) {
+          window.Telegram.WebApp.close();
+        } else {
+          alert("ትዕዛዝዎ በስኬት ተልኳል! ✅");
+        }
 
       } catch (err) {
         console.error("Error submitting order:", err);
@@ -483,14 +417,6 @@
         btn.disabled = false;
         btn.innerText = "ትዕዛዝ አረጋግጥ (Submit Order) 🚀";
       }
-    }
-
-    function closeWebAppDelay() {
-      setTimeout(() => {
-        if (window.Telegram && window.Telegram.WebApp) {
-          window.Telegram.WebApp.close();
-        }
-      }, 1000);
     }
   </script>
 </body>
