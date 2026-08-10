@@ -239,7 +239,7 @@
         deliveryFee = parseInt(selectedOption.getAttribute('data-fee')) || 0;
       }
 
-      document.getElementById('deliveryFee').innerText = deliveryFee + " ETB";
+      document.getElementById('deliveryFee').innerText = deliveryFee.toLocaleString() + " ETB";
 
       let itemsTotal = 0;
       let requiredAdvance = 0;
@@ -274,9 +274,9 @@
 
       const grandTotal = itemsTotal + deliveryFee;
 
-      document.getElementById('itemsTotal').innerText = itemsTotal + " ETB";
-      document.getElementById('grandTotal').innerText = grandTotal + " ETB";
-      document.getElementById('requiredAdvanceText').innerText = requiredAdvance + " ETB";
+      document.getElementById('itemsTotal').innerText = itemsTotal.toLocaleString() + " ETB";
+      document.getElementById('grandTotal').innerText = grandTotal.toLocaleString() + " ETB";
+      document.getElementById('requiredAdvanceText').innerText = requiredAdvance.toLocaleString() + " ETB";
       document.getElementById('advanceRuleNote').innerText = note;
     }
 
@@ -338,18 +338,11 @@
       try {
         let receiptUrl = "";
 
-        // 1. Upload Receipt to ImgBB
+        // 1. Upload Receipt Directly to ImgBB
         if (receiptInput.files.length > 0) {
           const file = receiptInput.files[0];
-          const base64Image = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result.split(',')[1]);
-            reader.onerror = error => reject(error);
-            reader.readAsDataURL(file);
-          });
-
           const formData = new FormData();
-          formData.append("image", base64Image);
+          formData.append("image", file);
 
           const imgRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
             method: "POST",
@@ -406,8 +399,6 @@
         // Safe Send Data to Telegram WebApp SDK if available
         if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
           try {
-            // The bot receives this payload through Telegram's web_app_data update.
-            // The bot can then notify the customer and forward the receipt URL/file to admin.
             window.Telegram.WebApp.sendData(JSON.stringify(payload));
           } catch (e) {
             console.log("sendData ignored or failed safely:", e);
