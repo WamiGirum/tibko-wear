@@ -325,23 +325,31 @@
       }
 
       try {
-        // 1. Upload Receipt to ImgBB using CORS Proxy
-        let receiptUrl = "";
+        // 1. Upload Receipt to ImgBB using Base64 (ያለ CORS Proxy ቀጥታ የሚሰራ)
         const file = receiptInput.files[0];
-        const formData = new FormData();
-        formData.append("image", file);
+        const base64Image = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result.split(',')[1]);
+          reader.onerror = error => reject(error);
+          reader.readAsDataURL(file);
+        });
 
-        const imgRes = await fetch(`https://corsproxy.io/?https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+        const formData = new FormData();
+        formData.append("key", IMGBB_API_KEY);
+        formData.append("image", base64Image);
+
+        const imgRes = await fetch("https://api.imgbb.com/1/upload", {
           method: "POST",
           body: formData
         });
+        
         const imgData = await imgRes.json();
 
-        if (imgData.success) {
-          receiptUrl = imgData.data.url;
-        } else {
-          throw new Error("የደረሰኝ ፎቶ መጫን አልተቻለም።");
+        if (!imgData.success) {
+          throw new Error(imgData.error?.message || "የደረሰኝ ፎቶ መጫን አልተቻለም።");
         }
+
+        const receiptUrl = imgData.data.url;
 
         // 2. Build Payload
         const payload = {
