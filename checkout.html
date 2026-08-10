@@ -155,7 +155,6 @@
   </div>
 
   <script>
-    // 1. Firebase & ImgBB Configuration
     const IMGBB_API_KEY = "80c60dbefb464422c2ac7c852bf5c9fc";
     const firebaseConfig = {
       apiKey: "AIzaSyCwU7g2s-xRCG3VsipwlqoA5F5R6oPcNdM",
@@ -170,7 +169,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Generate Order ID (#TBK-XXXX)
     const randomNum = Math.floor(1000 + Math.random() * 9000);
     const currentOrderId = `#TBK-${randomNum}`;
     document.getElementById('orderIdTag').innerText = currentOrderId;
@@ -179,7 +177,6 @@
     let catalogSelectedItem = null;
     let CATALOG_UNIT_PRICE = 800; 
 
-    // Initialize Telegram WebApp SDK
     let tgUser = null;
     let tgChatId = null;
 
@@ -189,7 +186,6 @@
       tgChatId = tgUser?.id || null;
     }
 
-    // Load Order Data & Auto-fill Username
     window.onload = function() {
       if (tgUser && tgUser.username) {
         document.getElementById('tgUsername').value = `@${tgUser.username}`;
@@ -338,7 +334,7 @@
       try {
         let receiptUrl = "";
 
-        // 1. Upload Receipt Directly to ImgBB
+        // 1. Upload Receipt directly to ImgBB
         if (receiptInput.files.length > 0) {
           const file = receiptInput.files[0];
           const formData = new FormData();
@@ -358,7 +354,7 @@
           receiptUrl = imgData.data.url;
         }
 
-        // 2. Build Payload
+        // 2. Build Payload (Combines Custom Design Link + Receipt Link)
         const payload = {
           orderId: currentOrderId,
           orderType: pendingCustomOrder ? "CUSTOM_ORDER" : "CATALOG_ORDER",
@@ -370,25 +366,33 @@
           deliveryFee: document.getElementById('deliveryFee').innerText,
           grandTotal: document.getElementById('grandTotal').innerText,
           requiredAdvance: document.getElementById('requiredAdvanceText').innerText,
-          receiptImage: receiptUrl || "ያልተያያዘ (በብዛት 1 ወይም በቆይታ የሚከፈል)",
+          
+          // Both Links sent in Payload
+          receiptImage: receiptUrl || "N/A",
+          designImage: pendingCustomOrder ? pendingCustomOrder.designImage : "N/A",
+
           receiptSubmitted: !!receiptUrl,
           paymentStatus: receiptUrl ? "RECEIPT_SUBMITTED_PENDING_APPROVAL" : "PAYMENT_PENDING",
-          customerMessage: receiptUrl
-            ? "የክፍያ ደረሰኝዎ ከትዕዛዝዎ ጋር ተያይዞ ተልኳል። እባክዎን Approval እስኪደረግ ትንሽ ይጠብቁ።"
-            : "ትዕዛዝዎ ተልኳል።",
-          adminMessage: receiptUrl
-            ? "የክፍያ ደረሰኝ (File) ከትዕዛዙ ጋር ተልኳል።"
-            : "አዲስ ትዕዛዝ ተልኳል።",
           status: "Pending",
           timestamp: Date.now(),
-          orderDetails: pendingCustomOrder ? pendingCustomOrder : {
+          orderDetails: pendingCustomOrder ? {
+            isCustom: true,
+            productTitle: "Custom Design T-Shirt",
+            designImage: pendingCustomOrder.designImage,
+            fileName: pendingCustomOrder.fileName,
+            description: pendingCustomOrder.description,
+            size: pendingCustomOrder.size,
+            qty: pendingCustomOrder.qty,
+            unitPrice: pendingCustomOrder.unitPrice
+          } : {
+            isCustom: false,
             productTitle: catalogSelectedItem ? catalogSelectedItem.title : "Catalog T-Shirt",
             qty: catalogQty,
             unitPrice: CATALOG_UNIT_PRICE
           }
         };
 
-        // 3. Save Order to Firebase Database
+        // 3. Store in Firebase Database
         const cleanOrderId = currentOrderId.replace('#', '');
         await db.ref('orders/' + cleanOrderId).set(payload);
 
@@ -396,16 +400,15 @@
         localStorage.removeItem('tbko_pending_order');
         localStorage.removeItem('tbko_catalog_item');
 
-        // Safe Send Data to Telegram WebApp SDK if available
+        // 4. Send directly to Telegram Bot via WebApp SDK
         if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
           try {
             window.Telegram.WebApp.sendData(JSON.stringify(payload));
           } catch (e) {
-            console.log("sendData ignored or failed safely:", e);
+            console.log("sendData error:", e);
           }
         }
 
-        // Close WebApp automatically after submission
         if (window.Telegram && window.Telegram.WebApp) {
           window.Telegram.WebApp.close();
         } else {
