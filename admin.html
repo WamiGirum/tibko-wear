@@ -8,6 +8,7 @@
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
 
   <script>
     tailwind.config = {
@@ -54,6 +55,7 @@
       <form id="addProductForm" onsubmit="saveProduct(event)" class="space-y-3">
         <!-- Hidden key for Editing -->
         <input type="hidden" id="editKey">
+        <input type="hidden" id="currentImageUrl">
 
         <div>
           <label class="text-xs font-bold text-gray-600 block mb-1">የቲሸርቱ ስም</label>
@@ -75,10 +77,15 @@
           </div>
         </div>
 
+        <!-- Image File Upload -->
         <div>
-          <label class="text-xs font-bold text-gray-600 block mb-1">የፎቶ URL (Image Link)</label>
-          <input type="url" id="image" required placeholder="https://..." class="w-full border p-2 rounded-lg text-xs">
-          <p class="text-[10px] text-gray-400 mt-0.5">የምስሉን ሊንክ ያስገቡ</p>
+          <label class="text-xs font-bold text-gray-600 block mb-1">የቲሸርቱ ፎቶ (Upload Image File)</label>
+          <input type="file" id="imageFile" accept="image/*" class="w-full border p-2 rounded-lg text-xs bg-white">
+          <p class="text-[10px] text-gray-400 mt-0.5">ከስልክዎ ወይም ከኮምፒዩተርዎ ፎቶ ይምረጡ</p>
+          <div id="imagePreview" class="mt-2 hidden">
+            <p class="text-[10px] text-gray-500 mb-1">የአሁን ፎቶ፦</p>
+            <img id="previewImg" src="" class="w-16 h-16 object-cover rounded border">
+          </div>
         </div>
 
         <!-- Sizes Selection -->
@@ -126,8 +133,8 @@
           </div>
         </div>
 
-        <button type="submit" id="submitBtn" class="w-full bg-tbkoRust text-white font-bold py-2.5 rounded-lg text-xs shadow hover:bg-orange-700 transition">
-          💾 ዕቃውን ለጥፍ (Upload Product)
+        <button type="submit" id="submitBtn" class="w-full bg-tbkoRust text-white font-bold py-2.5 rounded-lg text-xs shadow hover:bg-orange-700 transition flex items-center justify-center gap-2">
+          <span>💾</span> <span id="submitBtnText">ዕቃውን ለጥፍ (Upload Product)</span>
         </button>
 
         <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden w-full bg-gray-200 text-gray-700 font-bold py-2 rounded-lg text-xs transition">
@@ -159,20 +166,48 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    const storage = firebase.storage();
 
     function checkPass() {
       const pass = document.getElementById('adminPass').value;
-      if (pass === "tbko123") { // 🔑 የይለፍ ቃልህ tbko123 ነው
+      if (pass === "tbko123") {
         document.getElementById('loginOverlay').classList.add('hidden');
       } else {
         alert("የተሳሳተ የይለፍ ቃል ነው!");
       }
     }
 
-    function saveProduct(e) {
+    async function saveProduct(e) {
       e.preventDefault();
       
       const key = document.getElementById('editKey').value;
+      const fileInput = document.getElementById('imageFile');
+      const currentImageUrl = document.getElementById('currentImageUrl').value;
+      
+      let imageUrl = currentImageUrl;
+
+      // አዲስ ፎቶ ተመርጦ ከሆነ ወደ Firebase Storage አፕሎድ ማድረግ
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const submitBtnText = document.getElementById('submitBtnText');
+        submitBtnText.innerText = "ፎቶው እየተጫነ ነው...";
+        
+        try {
+          const storageRef = storage.ref('products/' + Date.now() + '_' + file.name);
+          const snapshot = await storageRef.put(file);
+          imageUrl = await snapshot.ref.getDownloadURL();
+        } catch (err) {
+          alert("ፎቶውን መጫን አልተቻለም፦ " + err.message);
+          submitBtnText.innerText = key ? "ለውጦቹን አስቀምጥ (Update)" : "ዕቃውን ለጥፍ (Upload Product)";
+          return;
+        }
+      }
+
+      if (!imageUrl) {
+        alert("እባክዎን የቲሸርቱን ፎቶ ይምረጡ!");
+        return;
+      }
+
       const sizes = Array.from(document.querySelectorAll('.size-checkbox:checked')).map(cb => cb.value);
       const colors = document.getElementById('colors').value.split(',').map(c => c.trim()).filter(c => c);
 
@@ -184,7 +219,7 @@
         title: document.getElementById('title').value,
         category: document.getElementById('category').value,
         price: Number(document.getElementById('price').value),
-        image: document.getElementById('image').value,
+        image: imageUrl,
         sizes: sizes,
         colors: colors,
         tag: tagValue,
@@ -193,6 +228,7 @@
       };
 
       if (key) {
+        // Edit mode (የነበረውን ማስተካከል)
         db.ref('products/' + key).update(productData)
           .then(() => {
             alert("ምርቱ በተሳካ ሁኔታ ተስተካክሏል!");
@@ -200,6 +236,7 @@
           })
           .catch(err => alert("ስህተት ተፈጥሯል፦ " + err.message));
       } else {
+        // Add mode (አዲስ መጨመር)
         productData.createdAt = Date.now();
         db.ref('products').push(productData)
           .then(() => {
@@ -215,17 +252,25 @@
       document.getElementById('title').value = item.title || '';
       document.getElementById('category').value = item.category || 'casual';
       document.getElementById('price').value = item.price || '';
-      document.getElementById('image').value = item.image || '';
+      document.getElementById('currentImageUrl').value = item.image || '';
       document.getElementById('colors').value = item.colors ? item.colors.join(', ') : '';
       document.getElementById('subtitle').value = item.subtitle || '';
       document.getElementById('tag').value = item.tag || '';
 
+      // የፎቶ Preview ማሳየት
+      if (item.image) {
+        document.getElementById('previewImg').src = item.image;
+        document.getElementById('imagePreview').classList.remove('hidden');
+      }
+
+      // Checkbox ሁኔታ ማስተካከል
       document.querySelectorAll('.size-checkbox').forEach(cb => {
         cb.checked = item.sizes ? item.sizes.includes(cb.value) : false;
       });
 
+      // ርዕሶችን እና በተኖችን ወደ Edit መቀየር
       document.getElementById('formTitle').innerHTML = "<span>✏️</span> ምርት ማስተካከያ";
-      document.getElementById('submitBtn').innerText = "💾 ለውጦቹን አስቀምጥ (Update)";
+      document.getElementById('submitBtnText').innerText = "ለውጦቹን አስቀምጥ (Update)";
       document.getElementById('submitBtn').classList.replace('bg-tbkoRust', 'bg-blue-600');
       document.getElementById('cancelBtn').classList.remove('hidden');
 
@@ -235,8 +280,10 @@
     function resetForm() {
       document.getElementById('addProductForm').reset();
       document.getElementById('editKey').value = '';
+      document.getElementById('currentImageUrl').value = '';
+      document.getElementById('imagePreview').classList.add('hidden');
       document.getElementById('formTitle').innerHTML = "<span>➕</span> አዲስ ቲሸርት መዝግብ";
-      document.getElementById('submitBtn').innerText = "💾 ዕቃውን ለጥፍ (Upload Product)";
+      document.getElementById('submitBtnText').innerText = "ዕቃውን ለጥፍ (Upload Product)";
       document.getElementById('submitBtn').classList.replace('bg-blue-600', 'bg-tbkoRust');
       document.getElementById('cancelBtn').classList.add('hidden');
     }
