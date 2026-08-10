@@ -147,10 +147,12 @@
     </div>
   </div>
 
-  <!-- Submit Button -->
-  <button id="submitBtn" onclick="confirmOrder()" class="w-full bg-tbkoNavy hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl shadow-lg transition">
-    ትዕዛዝ አረጋግጥ (Submit Order) 🚀
-  </button>
+  <!-- Submit Button & Telegram Direct Link Action -->
+  <div id="actionContainer">
+    <button id="submitBtn" onclick="confirmOrder()" class="w-full bg-tbkoNavy hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl shadow-lg transition">
+      ትዕዛዝ አረጋግጥ (Submit Order) 🚀
+    </button>
+  </div>
 
   <script>
     // 1. Firebase & ImgBB Configuration
@@ -295,6 +297,7 @@
         return;
       }
 
+      const cleanUsername = tgUsernameInput.replace('@', '');
       if (!tgUsernameInput.startsWith('@')) {
         tgUsernameInput = '@' + tgUsernameInput;
       }
@@ -391,9 +394,11 @@
         const cleanOrderId = currentOrderId.replace('#', '');
         await db.ref('orders/' + cleanOrderId).set(payload);
 
-        alert(`ትዕዛዝዎ በስኬት ተልኳል!\nትዕዛዝ ቁጥር፦ ${currentOrderId}`);
+        // Clear Local Storage
+        localStorage.removeItem('tbko_pending_order');
+        localStorage.removeItem('tbko_catalog_item');
 
-        // 4. Safe Send Data to Telegram WebApp (WebAppDataInvalid ን ለመከላከል በ try-catch ተጠብቋል)
+        // Safe Send Data to Telegram WebApp SDK if available
         if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
           try {
             window.Telegram.WebApp.sendData(JSON.stringify(payload));
@@ -402,16 +407,21 @@
           }
         }
 
-        // Clear Local Storage
-        localStorage.removeItem('tbko_pending_order');
-        localStorage.removeItem('tbko_catalog_item');
+        // Prepare message text for Telegram Redirect
+        const autoMsgText = encodeURIComponent(`ሰላም! 👋 ከ tibko WEAR ነው። ትዕዛዝዎ ደርሶናል፤ ትንሽ ይታገሱ ትዕዛዝዎ ክትትል ላይ ነው። ⏳\n\n🆔 ትዕዛዝ ቁጥር፦ ${currentOrderId}\n💰 ጠቅላላ ሂሳብ፦ ${payload.grandTotal}`);
+        const tgDirectUrl = `https://t.me/${cleanUsername}?text=${autoMsgText}`;
 
-        // Close WebApp or Redirect
-        if (window.Telegram && window.Telegram.WebApp) {
-          window.Telegram.WebApp.close();
-        } else {
-          window.location.href = "index.html";
-        }
+        // 4. Update UI: Show direct Telegram Send Button & Notification
+        const container = document.getElementById('actionContainer');
+        container.innerHTML = `
+          <div class="bg-green-50 border border-green-200 p-4 rounded-xl mb-3 text-center">
+            <p class="text-xs font-bold text-green-800 mb-1">ትዕዛዝዎ በስኬት ተመዝግቧል! ✅</p>
+            <p class="text-[11px] text-green-700 font-medium">እባክዎን ከታች ያለውን አዝራር ተጭነው በቴሌግራም መልእክቱን "Send" በማለት ያረጋግጡ።</p>
+          </div>
+          <a href="${tgDirectUrl}" target="_blank" onclick="closeWebAppDelay()" class="w-full block text-center bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition text-sm">
+            መልእክቱን በቴሌግራም ላክ (Send Message) 📩
+          </a>
+        `;
 
       } catch (err) {
         console.error("Error submitting order:", err);
@@ -419,6 +429,14 @@
         btn.disabled = false;
         btn.innerText = "ትዕዛዝ አረጋግጥ (Submit Order) 🚀";
       }
+    }
+
+    function closeWebAppDelay() {
+      setTimeout(() => {
+        if (window.Telegram && window.Telegram.WebApp) {
+          window.Telegram.WebApp.close();
+        }
+      }, 1000);
     }
   </script>
 </body>
