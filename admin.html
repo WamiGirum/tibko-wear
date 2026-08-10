@@ -14,9 +14,9 @@
       theme: {
         extend: {
           colors: {
-            tbkoNavy: '#1D3B6A',
-            tbkoRust: '#B85C28',
-            tbkoGold: '#D6923E'
+            tibkoNavy: '#1D3B6A',
+            tibkoRust: '#B85C28',
+            tibkoGold: '#D6923E'
           }
         }
       }
@@ -25,33 +25,46 @@
 </head>
 <body class="bg-slate-100 text-gray-800 font-sans pb-12 p-4">
 
+  <!-- Image Preview Modal -->
+  <div id="imageModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white p-4 rounded-2xl shadow-2xl max-w-sm w-full relative">
+      <button onclick="closeImageModal()" class="absolute -top-3 -right-3 bg-red-600 text-white rounded-full w-8 h-8 font-bold shadow flex items-center justify-center text-sm">✕</button>
+      <h3 class="font-bold text-tibkoNavy text-xs mb-2">🖼️ የክፍያ ደረሰኝ (Screenshot)</h3>
+      <img id="modalImage" src="" class="w-full max-h-[70vh] object-contain rounded-lg border bg-slate-50">
+      <div class="mt-3 flex justify-between gap-2">
+        <a id="modalDownloadLink" href="#" target="_blank" download class="flex-1 text-center bg-tibkoNavy text-white py-2 rounded-lg text-xs font-bold">⬇️ አውርድ (Download)</a>
+        <button onclick="closeImageModal()" class="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg text-xs font-bold">ዝጋ</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Password Overlay -->
-  <div id="loginOverlay" class="fixed inset-0 bg-tbkoNavy z-50 flex items-center justify-center p-4">
+  <div id="loginOverlay" class="fixed inset-0 bg-tibkoNavy z-50 flex items-center justify-center p-4">
     <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm text-center">
-      <h2 class="text-xl font-bold text-tbkoNavy mb-2">tibko Admin Login</h2>
+      <h2 class="text-xl font-bold text-tibkoNavy mb-2">tibko Admin Login</h2>
       <p class="text-xs text-gray-500 mb-4">ለመቀጠል የይለፍ ቃል ያስገቡ</p>
-      <input type="password" id="adminPass" placeholder="Password" class="w-full border p-2.5 rounded-lg text-center font-bold mb-3 focus:outline-none focus:ring-2 focus:ring-tbkoNavy">
-      <button onclick="checkPass()" class="w-full bg-tbkoNavy text-white py-2.5 rounded-lg font-bold">ግባ (Login)</button>
+      <input type="password" id="adminPass" placeholder="Password" class="w-full border p-2.5 rounded-lg text-center font-bold mb-3 focus:outline-none focus:ring-2 focus:ring-tibkoNavy">
+      <button onclick="checkPass()" class="w-full bg-tibkoNavy text-white py-2.5 rounded-lg font-bold">ግባ (Login)</button>
     </div>
   </div>
 
   <div class="max-w-md mx-auto">
     <!-- Header -->
-    <header class="bg-tbkoNavy text-white p-4 rounded-xl shadow mb-4 flex justify-between items-center">
+    <header class="bg-tibkoNavy text-white p-4 rounded-xl shadow mb-4 flex justify-between items-center">
       <div>
         <h1 class="font-bold text-lg">tibko Admin</h1>
-        <p class="text-[10px] text-tbkoGold">የዕቃዎችና የትዕዛዝ መቆጣጠሪያ ሰሌዳ</p>
+        <p class="text-[10px] text-tibkoGold">የዕቃዎችና የትዕዛዝ መቆጣጠሪያ ሰሌዳ</p>
       </div>
       <a href="index.html" class="bg-white/10 text-xs px-3 py-1.5 rounded-lg">ወደ ካታሎግ ➔</a>
     </header>
 
     <!-- Navigation Tabs -->
     <div class="flex gap-2 mb-4 bg-white p-1 rounded-xl border shadow-sm text-xs font-bold">
-      <button id="tabProductsBtn" onclick="switchTab('products')" class="flex-1 py-2 rounded-lg bg-tbkoNavy text-white transition">
+      <button id="tabProductsBtn" onclick="switchTab('products')" class="flex-1 py-2 rounded-lg bg-tibkoNavy text-white transition">
         📦 ምርቶች (Products)
       </button>
       <button id="tabOrdersBtn" onclick="switchTab('orders')" class="flex-1 py-2 rounded-lg text-gray-600 hover:bg-slate-100 transition flex items-center justify-center gap-1">
-        🛒 የገቡ ትዕዛዞች <span id="ordersCountBadge" class="bg-tbkoRust text-white text-[10px] px-1.5 py-0.5 rounded-full hidden">0</span>
+        🛒 የገቡ ትዕዛዞች <span id="ordersCountBadge" class="bg-tibkoRust text-white text-[10px] px-1.5 py-0.5 rounded-full hidden">0</span>
       </button>
     </div>
 
@@ -59,12 +72,11 @@
     <div id="productsSection">
       <!-- Add/Edit Product Form -->
       <div class="bg-white p-4 rounded-xl shadow mb-6 border">
-        <h2 id="formTitle" class="font-bold text-tbkoNavy mb-3 text-sm flex items-center gap-1">
+        <h2 id="formTitle" class="font-bold text-tibkoNavy mb-3 text-sm flex items-center gap-1">
           <span>➕</span> አዲስ ቲሸርት መዝግብ
         </h2>
 
         <form id="addProductForm" onsubmit="saveProduct(event)" class="space-y-3">
-          <!-- Hidden key & image URL for Editing -->
           <input type="hidden" id="editKey">
           <input type="hidden" id="currentImageUrl">
 
@@ -144,7 +156,7 @@
             </div>
           </div>
 
-          <button type="submit" id="submitBtn" class="w-full bg-tbkoRust text-white font-bold py-2.5 rounded-lg text-xs shadow hover:bg-orange-700 transition flex items-center justify-center gap-2">
+          <button type="submit" id="submitBtn" class="w-full bg-tibkoRust text-white font-bold py-2.5 rounded-lg text-xs shadow hover:bg-orange-700 transition flex items-center justify-center gap-2">
             <span>💾</span> <span id="submitBtnText">ዕቃውን ለጥፍ (Upload Product)</span>
           </button>
 
@@ -156,7 +168,7 @@
 
       <!-- Live Products List -->
       <div class="bg-white p-4 rounded-xl shadow border">
-        <h2 class="font-bold text-tbkoNavy mb-3 text-sm">📦 በካታሎግ ላይ ያሉ ዕቃዎች</h2>
+        <h2 class="font-bold text-tibkoNavy mb-3 text-sm">📦 በካታሎግ ላይ ያሉ ዕቃዎች</h2>
         <div id="adminProductList" class="space-y-3">
           <p class="text-xs text-gray-400 text-center py-4">በመጫን ላይ...</p>
         </div>
@@ -166,10 +178,17 @@
     <!-- TAB 2: ORDERS SECTION -->
     <div id="ordersSection" class="hidden">
       <div class="bg-white p-4 rounded-xl shadow border">
-        <h2 class="font-bold text-tbkoNavy mb-3 text-sm flex items-center justify-between">
-          <span>🛒 የደንበኞች ትዕዛዞች</span>
-          <span class="text-[10px] text-gray-400 font-normal">Realtime Updates</span>
-        </h2>
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="font-bold text-tibkoNavy text-sm">🛒 የደንበኞች ትዕዛዞች</h2>
+          <div class="flex gap-1">
+            <button onclick="clearApprovedOrders()" class="bg-amber-100 text-amber-800 hover:bg-amber-200 text-[10px] font-bold px-2 py-1 rounded border border-amber-300">
+              🧹 Approved የሆኑትን አፅዳ
+            </button>
+            <button onclick="deleteAllOrders()" class="bg-red-100 text-red-700 hover:bg-red-200 text-[10px] font-bold px-2 py-1 rounded border border-red-300">
+              🗑️ ሁሉንም አፅዳ
+            </button>
+          </div>
+        </div>
         <div id="adminOrdersList" class="space-y-4">
           <p class="text-xs text-gray-400 text-center py-4">ትዕዛዞች በመጫን ላይ...</p>
         </div>
@@ -179,7 +198,7 @@
   </div>
 
   <script>
-    // የተላከው የ ImgBB API Key
+    // ImgBB API Key
     const IMGBB_API_KEY = "80c60dbefb464422c2ac7c852bf5c9fc";
 
     // Firebase Realtime Database Config
@@ -204,6 +223,16 @@
       }
     }
 
+    function openImageModal(url) {
+      document.getElementById('modalImage').src = url;
+      document.getElementById('modalDownloadLink').href = url;
+      document.getElementById('imageModal').classList.remove('hidden');
+    }
+
+    function closeImageModal() {
+      document.getElementById('imageModal').classList.add('hidden');
+    }
+
     // Switch between Products and Orders Tabs
     function switchTab(tab) {
       const prodSec = document.getElementById('productsSection');
@@ -214,17 +243,17 @@
       if (tab === 'products') {
         prodSec.classList.remove('hidden');
         orderSec.classList.add('hidden');
-        prodBtn.className = "flex-1 py-2 rounded-lg bg-tbkoNavy text-white transition font-bold";
+        prodBtn.className = "flex-1 py-2 rounded-lg bg-tibkoNavy text-white transition font-bold";
         orderBtn.className = "flex-1 py-2 rounded-lg text-gray-600 hover:bg-slate-100 transition font-bold flex items-center justify-center gap-1";
       } else {
         prodSec.classList.add('hidden');
         orderSec.classList.remove('hidden');
-        orderBtn.className = "flex-1 py-2 rounded-lg bg-tbkoNavy text-white transition font-bold flex items-center justify-center gap-1";
+        orderBtn.className = "flex-1 py-2 rounded-lg bg-tibkoNavy text-white transition font-bold flex items-center justify-center gap-1";
         prodBtn.className = "flex-1 py-2 rounded-lg text-gray-600 hover:bg-slate-100 transition font-bold";
       }
     }
 
-    // ፎቶን ወደ ImgBB በከፍተኛ ፍጥነት አፕሎድ ማድረጊያ
+    // Upload image to ImgBB
     async function uploadToImgBB(file) {
       const formData = new FormData();
       formData.append("image", file);
@@ -274,8 +303,8 @@
       const colors = document.getElementById('colors').value.split(',').map(c => c.trim()).filter(c => c);
 
       const tagValue = document.getElementById('tag').value;
-      let tagColor = "bg-tbkoGold";
-      if (tagValue === "HOT") tagColor = "bg-tbkoRust";
+      let tagColor = "bg-tibkoGold";
+      if (tagValue === "HOT") tagColor = "bg-tibkoRust";
 
       const productData = {
         title: document.getElementById('title').value,
@@ -290,7 +319,6 @@
       };
 
       if (key) {
-        // Edit Mode
         db.ref('products/' + key).update(productData)
           .then(() => {
             alert("ምርቱ በተሳካ ሁኔታ ተስተካክሏል!");
@@ -298,7 +326,6 @@
           })
           .catch(err => alert("ስህተት ተፈጥሯል፦ " + err.message));
       } else {
-        // Add Mode
         productData.createdAt = Date.now();
         db.ref('products').push(productData)
           .then(() => {
@@ -330,7 +357,7 @@
 
       document.getElementById('formTitle').innerHTML = "<span>✏️</span> ምርት ማስተካከያ";
       document.getElementById('submitBtnText').innerText = "ለውጦቹን አስቀምጥ (Update)";
-      document.getElementById('submitBtn').classList.replace('bg-tbkoRust', 'bg-blue-600');
+      document.getElementById('submitBtn').classList.replace('bg-tibkoRust', 'bg-blue-600');
       document.getElementById('cancelBtn').classList.remove('hidden');
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -343,11 +370,11 @@
       document.getElementById('imagePreview').classList.add('hidden');
       document.getElementById('formTitle').innerHTML = "<span>➕</span> አዲስ ቲሸርት መዝግብ";
       document.getElementById('submitBtnText').innerText = "ዕቃውን ለጥፍ (Upload Product)";
-      document.getElementById('submitBtn').classList.replace('bg-blue-600', 'bg-tbkoRust');
+      document.getElementById('submitBtn').classList.replace('bg-blue-600', 'bg-tibkoRust');
       document.getElementById('cancelBtn').classList.add('hidden');
     }
 
-    // 1. Fetch Live Products
+    // Fetch Live Products
     db.ref('products').on('value', snapshot => {
       const listContainer = document.getElementById('adminProductList');
       listContainer.innerHTML = '';
@@ -367,9 +394,9 @@
 
         itemDiv.innerHTML = `
           <div class="flex items-center space-x-2">
-            <img src="${item.image}" class="w-10 h-10 object-cover rounded">
+            <img src="${item.image}" class="w-10 h-10 object-cover rounded cursor-pointer" onclick="openImageModal('${item.image}')">
             <div>
-              <p class="font-bold text-tbkoNavy">${item.title}</p>
+              <p class="font-bold text-tibkoNavy">${item.title}</p>
               <p class="text-gray-500">${item.price} ETB | ${item.category}</p>
             </div>
           </div>
@@ -392,7 +419,7 @@
       }
     }
 
-    // 2. Fetch Live Orders Realtime
+    // Fetch Live Orders Realtime
     db.ref('orders').on('value', snapshot => {
       const ordersContainer = document.getElementById('adminOrdersList');
       const badge = document.getElementById('ordersCountBadge');
@@ -405,7 +432,7 @@
         return;
       }
 
-      const orderKeys = Object.keys(data).reverse(); // ከቅርብ ጊዜ ወደ ኋላ
+      const orderKeys = Object.keys(data).reverse();
       badge.innerText = orderKeys.length;
       badge.classList.remove('hidden');
 
@@ -423,35 +450,38 @@
 
         orderCard.innerHTML = `
           <div class="flex justify-between items-center border-b pb-2">
-            <span class="font-bold text-tbkoNavy font-mono">${order.orderId || '#TBK-'+key}</span>
-            <span class="px-2 py-0.5 text-[10px] rounded-full font-bold ${isApproved ? 'bg-green-600 text-white' : 'bg-amber-500 text-white'}">
-              ${order.status || 'Pending'}
-            </span>
+            <span class="font-bold text-tibkoNavy font-mono">${order.orderId || '#TBK-'+key}</span>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 text-[10px] rounded-full font-bold ${isApproved ? 'bg-green-600 text-white' : 'bg-amber-500 text-white'}">
+                ${order.status || 'Pending'}
+              </span>
+              <button onclick="deleteSingleOrder('${key}')" title="ትዕዛዝ አጥፋ" class="text-red-500 hover:text-red-700 text-xs font-bold px-1">
+                🗑️
+              </button>
+            </div>
           </div>
 
           <div class="space-y-1 text-gray-700">
-            <p><strong class="text-tbkoNavy">ዕቃ፦</strong> ${itemTitle} ${qtyText}</p>
-            <p><strong class="text-tbkoNavy">ስልክ፦</strong> <a href="tel:${order.phone}" class="underline font-mono text-blue-600">${order.phone}</a></p>
-            <p><strong class="text-tbkoNavy">Telegram፦</strong> <a href="https://t.me/${cleanUsername}" target="_blank" class="underline font-bold text-tbkoRust">${order.telegramUser}</a></p>
-            <p><strong class="text-tbkoNavy">ቦታ፦</strong> ${order.deliveryInfo?.method === 'Pickup' ? 'ከሱቅ እወስዳለሁ ('+order.deliveryInfo.branch+')' : order.deliveryInfo?.zone + ' - ' + order.deliveryInfo?.address}</p>
-            <p><strong class="text-tbkoNavy">ጠቅላላ ሂሳብ፦</strong> <span class="font-bold text-tbkoNavy">${order.grandTotal}</span> | ቀብድ፦ <span class="font-bold text-tbkoRust">${order.requiredAdvance}</span></p>
+            <p><strong class="text-tibkoNavy">ዕቃ፦</strong> ${itemTitle} ${qtyText}</p>
+            <p><strong class="text-tibkoNavy">ስልክ፦</strong> <a href="tel:${order.phone}" class="underline font-mono text-blue-600">${order.phone}</a></p>
+            <p><strong class="text-tibkoNavy">Telegram፦</strong> <a href="https://t.me/${cleanUsername}" target="_blank" class="underline font-bold text-tibkoRust">${order.telegramUser}</a></p>
+            <p><strong class="text-tibkoNavy">ቦታ፦</strong> ${order.deliveryInfo?.method === 'Pickup' ? 'ከሱቅ እወስዳለሁ ('+order.deliveryInfo.branch+')' : order.deliveryInfo?.zone + ' - ' + order.deliveryInfo?.address}</p>
+            <p><strong class="text-tibkoNavy">ጠቅላላ ሂሳብ፦</strong> <span class="font-bold text-tibkoNavy">${order.grandTotal}</span> | ቀብድ፦ <span class="font-bold text-tibkoRust">${order.requiredAdvance}</span></p>
           </div>
 
           ${hasReceipt ? `
             <div class="pt-1">
-              <a href="${order.receiptImage}" target="_blank" class="text-[11px] text-blue-600 font-bold underline flex items-center gap-1">
+              <button onclick="openImageModal('${order.receiptImage}')" class="text-[11px] text-blue-600 font-bold underline flex items-center gap-1">
                 🖼️ የክፍያ ደረሰኝ (Screenshot) ተመልከት
-              </a>
+              </button>
             </div>
           ` : '<p class="text-[10px] text-gray-400 italic">ደረሰኝ አልተያያዘም</p>'}
 
           <div class="pt-2 border-t flex flex-col gap-1.5">
-            <!-- Message 1 Button -->
             <button onclick="sendMsg1('${cleanUsername}')" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-1.5 rounded-lg text-[11px] transition">
               📩 መልእክት 1 ላክ ("ትንሽ ይታገሱ...")
             </button>
 
-            <!-- Approve & Message 2 Button -->
             <button onclick="approveOrder('${key}', '${cleanUsername}', '${order.orderId || key}')" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 rounded-lg text-[11px] transition">
               ✅ Approve አድርግ & መልእክት 2 ላክ
             </button>
@@ -462,7 +492,7 @@
       });
     });
 
-    // Send Message 1: "ትንሽ ይታገሱ ትዕዛዝዎ ክትትል ላይ ነው"
+    // Send Message 1
     function sendMsg1(username) {
       if (!username) {
         alert("የደንበኛው ቴሌግራም ዩዘርኔም አልተገኘም!");
@@ -472,16 +502,13 @@
       window.open(`https://t.me/${username}?text=${text}`, '_blank');
     }
 
-    // Approve Order & Send Message 2: "ትዕዛዝዎ በተሳካ ሁኔታ ታዟል..."
+    // Approve Order & Send Message 2
     function approveOrder(key, username, orderId) {
-      // 1. Update status in Firebase
       db.ref('orders/' + key).update({
         status: "Approved",
         approvedAt: Date.now()
       }).then(() => {
         alert(`ትዕዛዝ ${orderId} በተሳካ ሁኔታ Approve ሆኗል!`);
-        
-        // 2. Open Telegram with Message 2
         if (username) {
           const text = encodeURIComponent(`ሰላም! 👋 ከ tibko WEAR ነው።\n\nትዕዛዝዎ በተሳካ ሁኔታ ተቀባይነት አግኝቶ ታዟል! 🎉\n🆔 የማዘዣ ቁጥርዎ፦ ${orderId}\n\nስለመረጡን እናመሰግናለን! 👕✨`);
           window.open(`https://t.me/${username}?text=${text}`, '_blank');
@@ -489,6 +516,53 @@
       }).catch(err => {
         alert("ስህተት ተፈጥሯል፦ " + err.message);
       });
+    }
+
+    // Delete Single Order
+    function deleteSingleOrder(key) {
+      if (confirm("እርግጠኛ ነህ ይህንን ትዕዛዝ ማጥፋት ትፈልጋለህ?")) {
+        db.ref('orders/' + key).remove()
+          .then(() => alert("ትዕዛዙ ተሰርዟል!"))
+          .catch(err => alert("ስህተት፦ " + err.message));
+      }
+    }
+
+    // Clear Only Approved Orders
+    function clearApprovedOrders() {
+      db.ref('orders').once('value', snapshot => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        let deletedCount = 0;
+        const updates = {};
+
+        Object.keys(data).forEach(key => {
+          if (data[key].status === "Approved") {
+            updates[key] = null;
+            deletedCount++;
+          }
+        });
+
+        if (deletedCount === 0) {
+          alert("ምንም Approved የሆነ የተስተናገደ ትዕዛዝ አልተገኘም!");
+          return;
+        }
+
+        if (confirm(`እርግጠኛ ነህ ${deletedCount} Approved የሆኑ ትዕዛዞችን ማፅዳት ትፈልጋለህ?`)) {
+          db.ref('orders').update(updates)
+            .then(() => alert(`${deletedCount} የተስተናገዱ ትዕዛዞች በስኬት ጸድተዋል!`))
+            .catch(err => alert("ስህተት፦ " + err.message));
+        }
+      });
+    }
+
+    // Delete All Orders
+    function deleteAllOrders() {
+      if (confirm("⚠️ ማስጠንቀቂያ፦ ሁሉንም ትዕዛዞች ማፅዳት ትፈልጋለህ? ይህ ድርጊት አይመለስም!")) {
+        db.ref('orders').remove()
+          .then(() => alert("ሁሉም ትዕዛዞች በስኬት ጸድተዋል!"))
+          .catch(err => alert("ስህተት፦ " + err.message));
+      }
     }
   </script>
 </body>
