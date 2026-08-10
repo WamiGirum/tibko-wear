@@ -354,7 +354,7 @@
           receiptUrl = imgData.data.url;
         }
 
-        // 2. Build Payload (Combines Custom Design Link + Receipt Link)
+        // 2. Build Payload
         const payload = {
           orderId: currentOrderId,
           orderType: pendingCustomOrder ? "CUSTOM_ORDER" : "CATALOG_ORDER",
@@ -367,7 +367,6 @@
           grandTotal: document.getElementById('grandTotal').innerText,
           requiredAdvance: document.getElementById('requiredAdvanceText').innerText,
           
-          // Both Links sent in Payload
           receiptImage: receiptUrl || "N/A",
           designImage: pendingCustomOrder ? pendingCustomOrder.designImage : "N/A",
 
@@ -409,10 +408,18 @@
           }
         }
 
-        if (window.Telegram && window.Telegram.WebApp) {
-          window.Telegram.WebApp.close();
+        // 5. Success Message & Close App Safely
+        const successMsg = "ትዕዛዝዎ በስኬት ተልኳል! 🚀\n\nእባክዎን አድሚን አፕሩቭ (Approve) እስኪያደርግ ድረስ ይታገሱ፤ እንደተረጋገጠ በቴሌግራም/በስልክዎ መልዕክት ይደርስዎታል።";
+
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.showAlert) {
+          window.Telegram.WebApp.showAlert(successMsg, () => {
+            window.Telegram.WebApp.close();
+          });
         } else {
-          alert("ትዕዛዝዎ በስኬት ተልኳል! ✅");
+          alert(successMsg);
+          if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.close();
+          }
         }
 
       } catch (err) {
