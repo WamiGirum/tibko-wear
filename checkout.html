@@ -28,18 +28,52 @@
 
   <h2 class="text-xl font-bold text-tbkoNavy mb-4">ትዕዛዝ አረጋግጥ & ክፍያ</h2>
 
-  <!-- Delivery Method -->
+  <!-- Delivery Method Selection -->
   <div class="bg-white p-4 rounded-xl shadow-sm border mb-4">
-    <h3 class="font-bold text-xs text-tbkoNavy mb-2">የመረከቢያ መንገድ</h3>
-    <div class="space-y-2 text-xs">
+    <h3 class="font-bold text-xs text-tbkoNavy mb-3">የመረከቢያ መንገድ</h3>
+    
+    <div class="space-y-3 text-xs">
+      <!-- Pickup Option -->
       <label class="flex items-center space-x-2 cursor-pointer">
-        <input type="radio" name="delivery" value="Pickup" checked class="text-tbkoNavy" onchange="toggleDeliveryFee()"> 
-        <span>ከሱቅ እወስዳለሁ (Pickup)</span>
+        <input type="radio" name="deliveryOption" value="Pickup" checked class="text-tbkoNavy" onchange="handleDeliveryChange()"> 
+        <span class="font-semibold">ከሱቅ እወስዳለሁ (Pickup)</span>
       </label>
+      
+      <!-- Branch Selection Dropdown for Pickup -->
+      <div id="pickupBranchSection" class="pl-6">
+        <label class="block text-[11px] text-gray-500 mb-1">የሚቀርብዎትን ቅርንጫፍ ይምረጡ፦</label>
+        <select id="pickupBranch" class="w-full text-xs p-2.5 border rounded-lg bg-slate-50 text-tbkoNavy font-medium">
+          <option value="ቄራ (Kera)">ቄራ</option>
+          <option value="ተክለሃይማኖት (Teklehaimanot)">ተክለሃይማኖት</option>
+          <option value="ሜክሲኮ (Mexico)">ሜክሲኮ</option>
+          <option value="ፒያሳ (Piassa)">ፒያሳ</option>
+        </select>
+      </div>
+
+      <hr class="my-2 border-gray-100">
+
+      <!-- Delivery Option -->
       <label class="flex items-center space-x-2 cursor-pointer">
-        <input type="radio" name="delivery" value="Delivery" class="text-tbkoNavy" onchange="toggleDeliveryFee()"> 
-        <span>መላኪያ (Delivery)</span>
+        <input type="radio" name="deliveryOption" value="Delivery" class="text-tbkoNavy" onchange="handleDeliveryChange()"> 
+        <span class="font-semibold">መላኪያ (Delivery)</span>
       </label>
+
+      <!-- Location Input Section for Delivery -->
+      <div id="deliveryLocationSection" class="pl-6 space-y-2 hidden">
+        <div>
+          <label class="block text-[11px] text-gray-500 mb-1">የመላኪያ ክልል/ቦታ ይምረጡ፦</label>
+          <select id="deliveryZone" onchange="updateDeliveryFee()" class="w-full text-xs p-2.5 border rounded-lg bg-slate-50 text-tbkoNavy font-medium">
+            <option value="AddisAbaba" data-fee="150">አዲስ አበባ ውስጥ (150 ETB)</option>
+            <option value="Regional" data-fee="300">ክፍለ ሀገር (300 ETB)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[11px] text-gray-500 mb-1">ትክክለኛ አድራሻ (ክፍለ ከተማ / ሰፈር ወይም Map Link)፦</label>
+          <input type="text" id="deliveryAddress" placeholder="ምሳሌ፦ ቦሌ መድኃኔዓለም / ቂርቆስ ወረዳ 02" class="w-full text-xs p-2.5 border rounded-lg bg-slate-50">
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -81,36 +115,80 @@
   </button>
 
   <script>
-    // Delivery Fee Calculator Logic
-    function toggleDeliveryFee() {
-      const delivery = document.querySelector('input[name="delivery"]:checked').value;
+    const basePrice = 800; // Base item price sample
+
+    // Handle visibility of Pickup vs Delivery sections
+    function handleDeliveryChange() {
+      const selectedOption = document.querySelector('input[name="deliveryOption"]:checked').value;
+      const pickupSection = document.getElementById('pickupBranchSection');
+      const deliverySection = document.getElementById('deliveryLocationSection');
+
+      if (selectedOption === 'Pickup') {
+        pickupSection.classList.remove('hidden');
+        deliverySection.classList.add('hidden');
+      } else {
+        pickupSection.classList.add('hidden');
+        deliverySection.classList.remove('hidden');
+      }
+      updateDeliveryFee();
+    }
+
+    // Dynamic Delivery Fee Calculation
+    function updateDeliveryFee() {
+      const selectedOption = document.querySelector('input[name="deliveryOption"]:checked').value;
       const deliveryFeeElem = document.getElementById('deliveryFee');
       const grandTotalElem = document.getElementById('grandTotal');
       
-      let basePrice = 800; // Sample Base Price
-      let fee = delivery === 'Delivery' ? 150 : 0;
-      
+      let fee = 0;
+
+      if (selectedOption === 'Delivery') {
+        const zoneSelect = document.getElementById('deliveryZone');
+        const selectedZoneOption = zoneSelect.options[zoneSelect.selectedIndex];
+        fee = parseInt(selectedZoneOption.getAttribute('data-fee')) || 0;
+      }
+
       deliveryFeeElem.innerText = fee + " ETB";
       grandTotalElem.innerText = (basePrice + fee) + " ETB";
     }
 
-    // Submit Order to Telegram
+    // Submit Order Payload to Telegram Mini App
     function confirmOrder() {
-      const deliveryMethod = document.querySelector('input[name="delivery"]:checked').value;
+      const selectedOption = document.querySelector('input[name="deliveryOption"]:checked').value;
       const receiptInput = document.getElementById('receiptInput');
 
-      const order = {
+      let locationDetails = {};
+
+      if (selectedOption === 'Pickup') {
+        locationDetails = {
+          method: "Pickup",
+          branch: document.getElementById('pickupBranch').value
+        };
+      } else {
+        const address = document.getElementById('deliveryAddress').value;
+        if (!address.trim()) {
+          alert("እባክዎን አድራሻዎን ያስገቡ!");
+          return;
+        }
+        const zoneSelect = document.getElementById('deliveryZone');
+        locationDetails = {
+          method: "Delivery",
+          zone: zoneSelect.options[zoneSelect.selectedIndex].text,
+          address: address
+        };
+      }
+
+      const orderData = {
         type: "CATALOG_ORDER",
-        delivery: deliveryMethod,
+        deliveryInfo: locationDetails,
         totalAmount: document.getElementById('grandTotal').innerText,
         receiptUploaded: receiptInput.files.length > 0 ? receiptInput.files[0].name : "No receipt attached",
         status: "PAYMENT_SUBMITTED"
       };
       
       if (window.Telegram && window.Telegram.WebApp) {
-        window.Telegram.WebApp.sendData(JSON.stringify(order));
+        window.Telegram.WebApp.sendData(JSON.stringify(orderData));
       } else {
-        alert("ትዕዛዝዎ ተልኳል!");
+        alert("ትዕዛዝዎ ተልኳል!\n" + JSON.stringify(orderData, null, 2));
       }
     }
   </script>
