@@ -25,11 +25,11 @@
 </head>
 <body class="bg-slate-100 text-gray-800 font-sans pb-12 p-4">
 
-  <!-- Image Preview Modal -->
+  <!-- Image Preview Modal (ለደረሰኝ እና ለ Custom Design ፎቶዎች) -->
   <div id="imageModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white p-4 rounded-2xl shadow-2xl max-w-sm w-full relative">
       <button onclick="closeImageModal()" class="absolute -top-3 -right-3 bg-red-600 text-white rounded-full w-8 h-8 font-bold shadow flex items-center justify-center text-sm">✕</button>
-      <h3 class="font-bold text-tibkoNavy text-xs mb-2">🖼️ የክፍያ ደረሰኝ (Screenshot)</h3>
+      <h3 id="modalTitle" class="font-bold text-tibkoNavy text-xs mb-2">🖼️ የፎቶ እይታ</h3>
       <img id="modalImage" src="" class="w-full max-h-[70vh] object-contain rounded-lg border bg-slate-50">
       <div class="mt-3 flex justify-between gap-2">
         <a id="modalDownloadLink" href="#" target="_blank" download class="flex-1 text-center bg-tibkoNavy text-white py-2 rounded-lg text-xs font-bold">⬇️ አውርድ (Download)</a>
@@ -92,11 +92,12 @@
                 <option value="casual">Casual Tees</option>
                 <option value="polo">Polo</option>
                 <option value="cultural">Cultural Prints</option>
+                <option value="custom">Custom Print T-Shirts</option>
               </select>
             </div>
             <div>
               <label class="text-xs font-bold text-gray-600 block mb-1">ዋጋ (ETB)</label>
-              <input type="number" id="price" required placeholder="800" class="w-full border p-2 rounded-lg text-xs">
+              <input type="number" id="price" min="1" required placeholder="800" class="w-full border p-2 rounded-lg text-xs">
             </div>
           </div>
 
@@ -104,7 +105,6 @@
           <div>
             <label class="text-xs font-bold text-gray-600 block mb-1">የቲሸርቱ ፎቶ (Upload Image)</label>
             <input type="file" id="imageFile" accept="image/*" class="w-full border p-2 rounded-lg text-xs bg-white">
-            <p class="text-[10px] text-gray-400 mt-0.5">ከስልክዎ ወይም ከኮምፒዩተርዎ ፎቶ ይምረጡ</p>
             <div id="imagePreview" class="mt-2 hidden">
               <p class="text-[10px] text-gray-500 mb-1">የአሁን ፎቶ፦</p>
               <img id="previewImg" src="" class="w-16 h-16 object-cover rounded border">
@@ -133,13 +133,11 @@
             </div>
           </div>
 
-          <!-- Colors Selection -->
           <div>
             <label class="text-xs font-bold text-gray-600 block mb-1">ያሉ ቀለሞች (በኮማ ይለዩ)</label>
             <input type="text" id="colors" placeholder="ጥቁር, ነጭ, ቡናማ" class="w-full border p-2 rounded-lg text-xs">
           </div>
 
-          <!-- Badge Tag & Subtitle -->
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="text-xs font-bold text-gray-600 block mb-1">ምልክት (Tag/Badge)</label>
@@ -182,7 +180,7 @@
           <h2 class="font-bold text-tibkoNavy text-sm">🛒 የደንበኞች ትዕዛዞች</h2>
           <div class="flex gap-1">
             <button onclick="clearApprovedOrders()" class="bg-amber-100 text-amber-800 hover:bg-amber-200 text-[10px] font-bold px-2 py-1 rounded border border-amber-300">
-              🧹 Approved የሆኑትን አፅዳ
+              🧹 Approved የአደረጉትን አፅዳ
             </button>
             <button onclick="deleteAllOrders()" class="bg-red-100 text-red-700 hover:bg-red-200 text-[10px] font-bold px-2 py-1 rounded border border-red-300">
               🗑️ ሁሉንም አፅዳ
@@ -198,13 +196,9 @@
   </div>
 
   <script>
-    // BOT USERNAME (የቴሌግራም ቦትዎን ዩዘርኔም እዚህ ያስገቡ)
     const BOT_USERNAME = "tibkowear_bot";
-
-    // ImgBB API Key
     const IMGBB_API_KEY = "80c60dbefb464422c2ac7c852bf5c9fc";
 
-    // Firebase Realtime Database Config
     const firebaseConfig = {
       apiKey: "AIzaSyCwU7g2s-xRCG3VsipwlqoA5F5R6oPcNdM",
       authDomain: "tibko-wear.firebaseapp.com",
@@ -216,6 +210,7 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    let localProducts = {};
 
     function checkPass() {
       const pass = document.getElementById('adminPass').value;
@@ -226,7 +221,8 @@
       }
     }
 
-    function openImageModal(url) {
+    function openImageModal(url, title = "የፎቶ እይታ") {
+      document.getElementById('modalTitle').innerText = title;
       document.getElementById('modalImage').src = url;
       document.getElementById('modalDownloadLink').href = url;
       document.getElementById('imageModal').classList.remove('hidden');
@@ -236,7 +232,6 @@
       document.getElementById('imageModal').classList.add('hidden');
     }
 
-    // Switch between Products and Orders Tabs
     function switchTab(tab) {
       const prodSec = document.getElementById('productsSection');
       const orderSec = document.getElementById('ordersSection');
@@ -256,7 +251,6 @@
       }
     }
 
-    // Upload image to ImgBB
     async function uploadToImgBB(file) {
       const formData = new FormData();
       formData.append("image", file);
@@ -270,7 +264,7 @@
       if (data.success) {
         return data.data.url;
       } else {
-        throw new Error(data.error.message || "Upload አልተሳካም።");
+        throw new Error(data.error?.message || "Upload አልተሳካም።");
       }
     }
 
@@ -282,6 +276,12 @@
       const currentImageUrl = document.getElementById('currentImageUrl').value;
       const submitBtnText = document.getElementById('submitBtnText');
       
+      const sizes = Array.from(document.querySelectorAll('.size-checkbox:checked')).map(cb => cb.value);
+      if (sizes.length === 0) {
+        alert("እባክዎን ቢያንስ አንድ የቲሸርት መጠን (Size) ይምረጡ!");
+        return;
+      }
+
       let imageUrl = currentImageUrl;
 
       if (fileInput.files.length > 0) {
@@ -299,10 +299,10 @@
 
       if (!imageUrl) {
         alert("እባክዎን የቲሸርቱን ፎቶ ይምረጡ!");
+        submitBtnText.innerText = key ? "ለውጦቹን አስቀምጥ (Update)" : "ዕቃውን ለጥፍ (Upload Product)";
         return;
       }
 
-      const sizes = Array.from(document.querySelectorAll('.size-checkbox:checked')).map(cb => cb.value);
       const colors = document.getElementById('colors').value.split(',').map(c => c.trim()).filter(c => c);
 
       const tagValue = document.getElementById('tag').value;
@@ -310,7 +310,7 @@
       if (tagValue === "HOT") tagColor = "bg-tibkoRust";
 
       const productData = {
-        title: document.getElementById('title').value,
+        title: document.getElementById('title').value.trim(),
         category: document.getElementById('category').value,
         price: Number(document.getElementById('price').value),
         image: imageUrl,
@@ -318,7 +318,7 @@
         colors: colors,
         tag: tagValue,
         tagColor: tagColor,
-        subtitle: document.getElementById('subtitle').value
+        subtitle: document.getElementById('subtitle').value.trim()
       };
 
       if (key) {
@@ -339,7 +339,10 @@
       }
     }
 
-    function editProduct(key, item) {
+    function editProduct(key) {
+      const item = localProducts[key];
+      if (!item) return;
+
       document.getElementById('editKey').value = key;
       document.getElementById('title').value = item.title || '';
       document.getElementById('category').value = item.category || 'casual';
@@ -377,12 +380,14 @@
       document.getElementById('cancelBtn').classList.add('hidden');
     }
 
-    // Fetch Live Products
+    // Realtime Products Fetch
     db.ref('products').on('value', snapshot => {
       const listContainer = document.getElementById('adminProductList');
       listContainer.innerHTML = '';
 
       const data = snapshot.val();
+      localProducts = data || {};
+
       if (!data) {
         listContainer.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">ምንም የተመዘገበ ዕቃ የለም።</p>';
         return;
@@ -392,19 +397,17 @@
         const item = data[key];
         const itemDiv = document.createElement('div');
         itemDiv.className = "flex items-center justify-between border-b pb-2 text-xs";
-        
-        const itemJson = JSON.stringify(item).replace(/'/g, "&apos;");
 
         itemDiv.innerHTML = `
           <div class="flex items-center space-x-2">
-            <img src="${item.image}" class="w-10 h-10 object-cover rounded cursor-pointer" onclick="openImageModal('${item.image}')">
+            <img src="${item.image}" class="w-10 h-10 object-cover rounded cursor-pointer" onclick="openImageModal('${item.image}', 'የምርት ፎቶ')">
             <div>
               <p class="font-bold text-tibkoNavy">${item.title}</p>
               <p class="text-gray-500">${item.price} ETB | ${item.category}</p>
             </div>
           </div>
           <div class="flex space-x-1">
-            <button onclick='editProduct("${key}", ${itemJson})' class="bg-blue-50 text-blue-600 px-2.5 py-1 rounded font-bold hover:bg-blue-100">
+            <button onclick="editProduct('${key}')" class="bg-blue-50 text-blue-600 px-2.5 py-1 rounded font-bold hover:bg-blue-100">
               ✏️ አርም
             </button>
             <button onclick="deleteProduct('${key}')" class="bg-red-50 text-red-600 px-2.5 py-1 rounded font-bold hover:bg-red-100">
@@ -422,7 +425,7 @@
       }
     }
 
-    // Fetch Live Orders Realtime
+    // Realtime Orders Fetch (Matches Checkout Payload)
     db.ref('orders').on('value', snapshot => {
       const ordersContainer = document.getElementById('adminOrdersList');
       const badge = document.getElementById('ordersCountBadge');
@@ -444,17 +447,26 @@
         const cleanUsername = order.telegramUser ? order.telegramUser.replace('@', '').trim() : '';
         const isApproved = order.status === "Approved";
         const orderIdVal = order.orderId || '#TBK-' + key;
+        const isCustom = order.orderType === "CUSTOM_ORDER" || order.orderDetails?.isCustom;
 
         const orderCard = document.createElement('div');
         orderCard.className = `p-3 rounded-xl border text-xs space-y-2 ${isApproved ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-200'}`;
 
-        let itemTitle = order.orderDetails?.productTitle || "Custom Order";
+        let itemTitle = order.orderDetails?.productTitle || (isCustom ? "Custom Design T-Shirt" : "Catalog T-Shirt");
         let qtyText = order.orderDetails?.qty ? `(ብዛት፦ ${order.orderDetails.qty})` : "";
+        let sizeText = order.orderDetails?.size ? ` | Size: ${order.orderDetails.size}` : "";
+        let customDesc = order.orderDetails?.description ? order.orderDetails.description : "";
+        
         let hasReceipt = order.receiptImage && order.receiptImage.startsWith('http');
+        let hasCustomDesign = (order.designImage && order.designImage.startsWith('http')) || (order.orderDetails?.designImage && order.orderDetails.designImage.startsWith('http'));
+        let designUrl = order.designImage || order.orderDetails?.designImage || "";
 
         orderCard.innerHTML = `
           <div class="flex justify-between items-center border-b pb-2">
-            <span class="font-bold text-tibkoNavy font-mono">${orderIdVal}</span>
+            <div class="flex items-center gap-1.5">
+              <span class="font-bold text-tibkoNavy font-mono">${orderIdVal}</span>
+              ${isCustom ? '<span class="bg-purple-100 text-purple-700 text-[9px] font-bold px-1.5 py-0.5 rounded border border-purple-200">🎨 Custom</span>' : '<span class="bg-blue-100 text-blue-700 text-[9px] font-bold px-1.5 py-0.5 rounded border border-blue-200">🛒 Catalog</span>'}
+            </div>
             <div class="flex items-center gap-2">
               <span class="px-2 py-0.5 text-[10px] rounded-full font-bold ${isApproved ? 'bg-green-600 text-white' : 'bg-amber-500 text-white'}">
                 ${order.status || 'Pending'}
@@ -466,16 +478,27 @@
           </div>
 
           <div class="space-y-1 text-gray-700">
-            <p><strong class="text-tibkoNavy">ዕቃ፦</strong> ${itemTitle} ${qtyText}</p>
-            <p><strong class="text-tibkoNavy">ስልክ፦</strong> <a href="tel:${order.phone}" class="underline font-mono text-blue-600">${order.phone || 'ያልተገለጸ'}</a></p>
+            <p><strong class="text-tibkoNavy">ዕቃ፦</strong> ${itemTitle} ${qtyText}${sizeText}</p>
+            ${customDesc ? `<p><strong class="text-tibkoNavy">የዲዛይን መግለጫ፦</strong> <span class="text-gray-600 bg-white p-1 rounded border block mt-0.5 text-[11px]">${customDesc}</span></p>` : ''}
+            <p><strong class="text-tibkoNavy">ስልክ፦</strong> <a href="tel:${order.phone}" class="underline font-mono text-blue-600 font-bold">${order.phone || 'ያልተገለጸ'}</a></p>
             <p><strong class="text-tibkoNavy">Telegram፦</strong> ${cleanUsername ? `<a href="https://t.me/${cleanUsername}" target="_blank" class="underline font-bold text-tibkoRust">@${cleanUsername}</a>` : '<span class="text-gray-400">የለም</span>'}</p>
             <p><strong class="text-tibkoNavy">ቦታ፦</strong> ${order.deliveryInfo?.method === 'Pickup' ? 'ከሱቅ እወስዳለሁ ('+(order.deliveryInfo.branch || 'ዋና ሱቅ')+')' : (order.deliveryInfo?.zone || '') + ' - ' + (order.deliveryInfo?.address || '')}</p>
-            <p><strong class="text-tibkoNavy">ጠቅላላ ሂሳብ፦</strong> <span class="font-bold text-tibkoNavy">${order.grandTotal || 0} ETB</span> | ቀብድ፦ <span class="font-bold text-tibkoRust">${order.requiredAdvance || 0} ETB</span></p>
+            <p><strong class="text-tibkoNavy">ጠቅላላ ሂሳብ፦</strong> <span class="font-bold text-tibkoNavy">${order.grandTotal || 0}</span> | ቀብድ፦ <span class="font-bold text-tibkoRust">${order.requiredAdvance || 0}</span></p>
           </div>
 
+          <!-- Custom Design Image View -->
+          ${hasCustomDesign ? `
+            <div class="pt-1">
+              <button onclick="openImageModal('${designUrl}', '🎨 የደንበኛው Custom Design')" class="text-[11px] text-purple-700 font-bold underline flex items-center gap-1 bg-purple-50 p-1.5 rounded border border-purple-200 w-full justify-center">
+                🎨 የደንበኛውን Custom Design ፎቶ ተመልከት
+              </button>
+            </div>
+          ` : ''}
+
+          <!-- Payment Receipt View -->
           ${hasReceipt ? `
             <div class="pt-1">
-              <button onclick="openImageModal('${order.receiptImage}')" class="text-[11px] text-blue-600 font-bold underline flex items-center gap-1">
+              <button onclick="openImageModal('${order.receiptImage}', '🖼️ የክፍያ ደረሰኝ (Receipt)')" class="text-[11px] text-blue-600 font-bold underline flex items-center gap-1">
                 🖼️ የክፍያ ደረሰኝ (Screenshot) ተመልከት
               </button>
             </div>
@@ -496,13 +519,11 @@
       });
     });
 
-    // Send Message 1 to Bot (Deep link with payload)
     function sendMsg1ToBot(key, orderId) {
       const cleanOrderId = orderId.replace('#', '');
       window.open(`https://t.me/${BOT_USERNAME}?start=wait_${cleanOrderId}`, '_blank');
     }
 
-    // Approve Order & Send Message 2 to Bot
     function approveOrder(key, orderId) {
       db.ref('orders/' + key).update({
         status: "Approved",
@@ -516,7 +537,6 @@
       });
     }
 
-    // Delete Single Order
     function deleteSingleOrder(key) {
       if (confirm("እርግጠኛ ነህ ይህንን ትዕዛዝ ማጥፋት ትፈልጋለህ?")) {
         db.ref('orders/' + key).remove()
@@ -525,7 +545,6 @@
       }
     }
 
-    // Clear Only Approved Orders
     function clearApprovedOrders() {
       db.ref('orders').once('value', snapshot => {
         const data = snapshot.val();
@@ -554,7 +573,6 @@
       });
     }
 
-    // Delete All Orders
     function deleteAllOrders() {
       if (confirm("⚠️ ማስጠንቀቂያ፦ ሁሉንም ትዕዛዞች ማፅዳት ትፈልጋለህ? ይህ ድርጊት አይመለስም!")) {
         db.ref('orders').remove()
