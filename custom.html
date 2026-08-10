@@ -76,7 +76,7 @@
       </div>
       <div>
         <label class="block text-xs font-bold text-tbkoNavy mb-1">ብዛት (Qty)</label>
-        <input id="qty" type="number" value="1" min="1" class="w-full text-xs p-2.5 border rounded-lg" onchange="calculateCustomEstimate()">
+        <input id="qty" type="number" value="1" min="1" class="w-full text-xs p-2.5 border rounded-lg" onchange="calculateCustomEstimate()" onkeyup="calculateCustomEstimate()">
       </div>
     </div>
 
@@ -103,6 +103,7 @@
     const tg = window.Telegram?.WebApp;
     if (tg) tg.ready();
 
+    const IMGBB_API_KEY = "80c60dbefb464422c2ac7c852bf5c9fc";
     const UNIT_PRICE = 1200; // Custom T-shirt base price
 
     function showFileName() {
@@ -115,12 +116,18 @@
     }
 
     function calculateCustomEstimate() {
-      const qty = parseInt(document.getElementById('qty').value) || 1;
+      const qtyInput = document.getElementById('qty');
+      let qty = parseInt(qtyInput.value) || 1;
+      if (qty < 1) {
+        qty = 1;
+        qtyInput.value = 1;
+      }
+      
       const total = qty * UNIT_PRICE;
       const advance = total * 0.50;
 
-      document.getElementById('customTotal').innerText = total + " ETB";
-      document.getElementById('customAdvance').innerText = advance + " ETB";
+      document.getElementById('customTotal').innerText = total.toLocaleString() + " ETB";
+      document.getElementById('customAdvance').innerText = advance.toLocaleString() + " ETB";
     }
 
     async function proceedToCheckout(event) {
@@ -140,54 +147,61 @@
       const btn = event.currentTarget;
       const originalContent = btn.innerHTML;
       btn.disabled = true;
-      btn.innerHTML = "<span>መረጃው እየተዘጋጀ ነው... ⏳</span>";
+      btn.innerHTML = "<span>ዲዛይኑ እየተጫነ ነው... ⏳</span>";
 
       try {
         const file = fileInput.files[0];
-        const reader = new FileReader();
+        
+        // 1. Upload File Directly to ImgBB
+        const formData = new FormData();
+        formData.append("image", file);
 
-        reader.onload = function(e) {
-          const designBase64 = e.target.result;
-          const qty = parseInt(document.getElementById('qty').value) || 1;
-          const totalAmount = qty * UNIT_PRICE;
-          const requiredAdvance = totalAmount * 0.50;
+        const imgRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+          method: "POST",
+          body: formData
+        });
 
-          const customOrderData = {
-            isCustom: true,
-            phone: phone,
-            fileName: file.name,
-            designImage: designBase64,
-            description: document.getElementById('desc').value,
-            size: document.getElementById('size').value,
-            qty: qty,
-            unitPrice: UNIT_PRICE,
-            totalAmount: totalAmount,
-            advancePercentage: 50,
-            requiredAdvance: requiredAdvance
-          };
+        const imgData = await imgRes.json();
 
-          const orderJson = JSON.stringify(customOrderData);
+        if (!imgData.success) {
+          throw new Error(imgData.error?.message || "ዲዛይኑን መጫን አልተቻለም።");
+        }
 
-          // 1. በ Telegram CloudStorage ላይ ማስቀመጥ
-          if (tg && tg.CloudStorage) {
-            tg.CloudStorage.setItem('tbko_pending_order', orderJson, (err, success) => {
-              if (err) {
-                // CloudStorage ባይሰራ ወደ localStorage እንደ አማራጭ (Fallback) መጠቀም
-                localStorage.setItem('tbko_pending_order', orderJson);
-              }
-              window.location.href = "checkout.html";
-            });
-          } else {
-            // በቴሌግራም ውጭ ከሆነ በ localStorage ማስቀመጥ
-            localStorage.setItem('tbko_pending_order', orderJson);
-            window.location.href = "checkout.html";
-          }
+        const designUrl = imgData.data.url;
+        const qty = parseInt(document.getElementById('qty').value) || 1;
+        const totalAmount = qty * UNIT_PRICE;
+        const requiredAdvance = totalAmount * 0.50;
+
+        // 2. Build Light Order Object (No Heavy Base64)
+        const customOrderData = {
+          isCustom: true,
+          phone: phone,
+          fileName: file.name,
+          designImage: designUrl, // Cloud URL
+          description: document.getElementById('desc').value.trim(),
+          size: document.getElementById('size').value,
+          qty: qty,
+          unitPrice: UNIT_PRICE,
+          totalAmount: totalAmount,
+          advancePercentage: 50,
+          requiredAdvance: requiredAdvance
         };
 
-        reader.readAsDataURL(file);
+        const orderJson = JSON.stringify(customOrderData);
+
+        // 3. Save to Storage & Navigate safely
+        if (tg && tg.CloudStorage) {
+          tg.CloudStorage.setItem('tbko_pending_order', orderJson, (err) => {
+            localStorage.setItem('tbko_pending_order', orderJson);
+            window.location.href = "checkout.html";
+          });
+        } else {
+          localStorage.setItem('tbko_pending_order', orderJson);
+          window.location.href = "checkout.html";
+        }
 
       } catch (err) {
-        alert("ስህተት፦ " + err.message);
+        alert("ስህተት አጋጥሟል፦ " + err.message);
         btn.disabled = false;
         btn.innerHTML = originalContent;
       }
