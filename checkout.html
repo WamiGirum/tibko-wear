@@ -39,10 +39,17 @@
 
   <h2 class="text-xl font-bold text-tbkoNavy mb-2">ትዕዛዝ አረጋግጥ & ክፍያ</h2>
 
-  <!-- Phone Number Section -->
-  <div class="bg-white p-4 rounded-xl shadow-sm border mb-4">
-    <label class="block text-xs font-bold text-tbkoNavy mb-1">ስልክ ቁጥር <span class="text-red-500">*</span></label>
-    <input type="tel" id="phone" placeholder="0912345678" class="w-full text-xs p-3 border rounded-lg focus:outline-none focus:border-tbkoNavy font-semibold" required>
+  <!-- Contact Info Section (Phone & Telegram Username) -->
+  <div class="bg-white p-4 rounded-xl shadow-sm border mb-4 space-y-3">
+    <div>
+      <label class="block text-xs font-bold text-tbkoNavy mb-1">ስልክ ቁጥር <span class="text-red-500">*</span></label>
+      <input type="tel" id="phone" placeholder="0912345678" class="w-full text-xs p-3 border rounded-lg focus:outline-none focus:border-tbkoNavy font-semibold" required>
+    </div>
+    
+    <div>
+      <label class="block text-xs font-bold text-tbkoNavy mb-1">የቴሌግራም ዩዘርኔም (Telegram Username) <span class="text-red-500">*</span></label>
+      <input type="text" id="tgUsername" placeholder="@username" class="w-full text-xs p-3 border rounded-lg focus:outline-none focus:border-tbkoNavy font-semibold" required>
+    </div>
   </div>
 
   <!-- Item Quantity Selection (Catalog Only) -->
@@ -168,15 +175,23 @@
     let catalogSelectedItem = null;
     let CATALOG_UNIT_PRICE = 800; 
 
-    // Initialize Telegram WebApp
+    // Initialize Telegram WebApp SDK
     let tgUser = null;
+    let tgChatId = null;
+
     if (window.Telegram && window.Telegram.WebApp) {
       window.Telegram.WebApp.ready();
       tgUser = window.Telegram.WebApp.initDataUnsafe?.user || null;
+      tgChatId = tgUser?.id || null;
     }
 
-    // Load Order Data on Page Load
+    // Load Order Data & Auto-fill Username on Page Load
     window.onload = function() {
+      // Auto-fill Telegram Username from WebApp SDK if available
+      if (tgUser && tgUser.username) {
+        document.getElementById('tgUsername').value = `@${tgUser.username}`;
+      }
+
       // Check Custom Order from localStorage
       const savedCustomData = localStorage.getItem('tbko_pending_order');
       if (savedCustomData) {
@@ -258,11 +273,22 @@
 
     async function confirmOrder() {
       const phone = document.getElementById('phone').value.trim();
+      let tgUsernameInput = document.getElementById('tgUsername').value.trim();
       const receiptInput = document.getElementById('receiptInput');
 
       if (!phone) {
         alert("እባክዎን ስልክ ቁጥርዎን ያስገቡ!");
         return;
+      }
+
+      if (!tgUsernameInput) {
+        alert("እባክዎን የቴሌግራም ዩዘርኔምዎን ያስገቡ!");
+        return;
+      }
+
+      // ዩዘርኔሙ @ ካሌለው መጨመር
+      if (!tgUsernameInput.startsWith('@')) {
+        tgUsernameInput = '@' + tgUsernameInput;
       }
 
       if (receiptInput.files.length === 0) {
@@ -305,7 +331,6 @@
         const formData = new FormData();
         formData.append("image", file);
 
-        // CORS Proxy በመጨመር ImgBB ላይ በስኬት እንዲጫን ማድረግ
         const imgRes = await fetch(`https://corsproxy.io/?https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
           method: "POST",
           body: formData
@@ -323,13 +348,14 @@
           orderId: currentOrderId,
           orderType: pendingCustomOrder ? "CUSTOM_ORDER" : "CATALOG_ORDER",
           phone: phone,
+          telegramUser: tgUsernameInput,
+          chatId: tgChatId,
           deliveryInfo: locationDetails,
           itemsTotal: document.getElementById('itemsTotal').innerText,
           deliveryFee: document.getElementById('deliveryFee').innerText,
           grandTotal: document.getElementById('grandTotal').innerText,
           requiredAdvance: document.getElementById('requiredAdvanceText').innerText,
           receiptImage: receiptUrl,
-          telegramUser: tgUser ? `@${tgUser.username || tgUser.first_name}` : "ድረ-ገጽ",
           status: "Pending",
           timestamp: Date.now(),
           orderDetails: pendingCustomOrder ? pendingCustomOrder : {
@@ -345,12 +371,12 @@
 
         alert(`ትዕዛዝዎ በስኬት ተልኳል!\nትዕዛዝ ቁጥር፦ ${currentOrderId}`);
 
-        // 4. Send Data to Telegram Bot
+        // 4. Send Data to Telegram Bot WebApp
         if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
           window.Telegram.WebApp.sendData(JSON.stringify(payload));
         }
 
-        // Clear Storage
+        // Clear Local Storage
         localStorage.removeItem('tbko_pending_order');
         localStorage.removeItem('tbko_catalog_item');
 
