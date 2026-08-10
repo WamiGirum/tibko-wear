@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TBKO WEAR - Checkout</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            tbkoNavy: '#1D3B6A',
+            tbkoRust: '#B85C28',
+            tbkoGold: '#D6923E',
+            tbkoBg: '#F8F9FA'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-tbkoBg text-gray-800 font-sans p-4 pb-20">
+
+  <!-- Back Button -->
+  <a href="index.html" class="text-sm text-tbkoNavy font-bold mb-4 inline-block">← ወደ ካታሎግ ተመለስ</a>
+
+  <h2 class="text-xl font-bold text-tbkoNavy mb-4">ትዕዛዝ አረጋግጥ & ክፍያ</h2>
+
+  <!-- Delivery Method -->
+  <div class="bg-white p-4 rounded-xl shadow-sm border mb-4">
+    <h3 class="font-bold text-xs text-tbkoNavy mb-2">የመረከቢያ መንገድ</h3>
+    <div class="space-y-2 text-xs">
+      <label class="flex items-center space-x-2 cursor-pointer">
+        <input type="radio" name="delivery" value="Pickup" checked class="text-tbkoNavy" onchange="toggleDeliveryFee()"> 
+        <span>ከሱቅ እወስዳለሁ (Pickup)</span>
+      </label>
+      <label class="flex items-center space-x-2 cursor-pointer">
+        <input type="radio" name="delivery" value="Delivery" class="text-tbkoNavy" onchange="toggleDeliveryFee()"> 
+        <span>መላኪያ (Delivery)</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Pricing Breakdown -->
+  <div class="bg-white p-4 rounded-xl shadow-sm border space-y-2 mb-4 text-xs">
+    <div class="flex justify-between text-gray-600">
+      <span>የዕቃዎች ዋጋ:</span>
+      <span id="itemsTotal">800 ETB</span>
+    </div>
+    <div class="flex justify-between text-gray-600">
+      <span>የትራንስፖርት ክፍያ:</span>
+      <span id="deliveryFee">0 ETB</span>
+    </div>
+    <hr class="my-1">
+    <div class="flex justify-between font-bold text-sm text-tbkoNavy">
+      <span>ጠቅላላ የሚከፈል:</span>
+      <span id="grandTotal" class="text-tbkoRust font-extrabold">800 ETB</span>
+    </div>
+  </div>
+
+  <!-- Bank Details & Receipt Upload -->
+  <div class="bg-white p-4 rounded-xl shadow-sm border space-y-3 mb-4">
+    <h3 class="font-bold text-xs text-tbkoNavy">የክፍያ አካውንቶች</h3>
+    <div class="bg-slate-50 p-3 rounded-lg border text-xs text-gray-700 space-y-1">
+      <p class="font-bold">🏦 CBE: <span class="font-mono text-tbkoNavy">1000123456789</span></p>
+      <p class="font-bold">📲 Telebirr: <span class="font-mono text-tbkoNavy">0911223344</span></p>
+      <p class="text-[10px] text-gray-500">ስም: TBKO WEAR</p>
+    </div>
+
+    <div>
+      <label class="block text-xs font-bold text-tbkoNavy mb-1">የክፍያ ደረሰኝ (Screenshot)</label>
+      <input type="file" id="receiptInput" accept="image/*" class="w-full text-xs text-gray-500 border rounded-lg p-2 bg-slate-50">
+    </div>
+  </div>
+
+  <!-- Submit Button -->
+  <button onclick="confirmOrder()" class="w-full bg-tbkoNavy hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl shadow-lg transition">
+    ትዕዛዝ አረጋግጥ (Submit Order)
+  </button>
+
+  <script>
+    // Delivery Fee Calculator Logic
+    function toggleDeliveryFee() {
+      const delivery = document.querySelector('input[name="delivery"]:checked').value;
+      const deliveryFeeElem = document.getElementById('deliveryFee');
+      const grandTotalElem = document.getElementById('grandTotal');
+      
+      let basePrice = 800; // Sample Base Price
+      let fee = delivery === 'Delivery' ? 150 : 0;
+      
+      deliveryFeeElem.innerText = fee + " ETB";
+      grandTotalElem.innerText = (basePrice + fee) + " ETB";
+    }
+
+    // Submit Order to Telegram
+    function confirmOrder() {
+      const deliveryMethod = document.querySelector('input[name="delivery"]:checked').value;
+      const receiptInput = document.getElementById('receiptInput');
+
+      const order = {
+        type: "CATALOG_ORDER",
+        delivery: deliveryMethod,
+        totalAmount: document.getElementById('grandTotal').innerText,
+        receiptUploaded: receiptInput.files.length > 0 ? receiptInput.files[0].name : "No receipt attached",
+        status: "PAYMENT_SUBMITTED"
+      };
+      
+      if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.sendData(JSON.stringify(order));
+      } else {
+        alert("ትዕዛዝዎ ተልኳል!");
+      }
+    }
+  </script>
+</body>
+</html>
