@@ -26,20 +26,32 @@
   <!-- Back Button -->
   <a href="index.html" class="text-sm text-tbkoNavy font-bold mb-4 inline-block">← ወደ ካታሎግ ተመለስ</a>
 
-  <h2 class="text-xl font-bold text-tbkoNavy mb-4">ትዕዛዝ አረጋግጥ & ክፍያ</h2>
+  <h2 class="text-xl font-bold text-tbkoNavy mb-2">ትዕዛዝ አረጋግጥ & ክፍያ</h2>
+
+  <!-- Phone Number Section -->
+  <div class="bg-white p-4 rounded-xl shadow-sm border mb-4">
+    <label class="block text-xs font-bold text-tbkoNavy mb-1">ስልክ ቁጥር <span class="text-red-500">*</span></label>
+    <input type="tel" id="phone" placeholder="0912345678" class="w-full text-xs p-3 border rounded-lg focus:outline-none focus:border-tbkoNavy font-semibold" required>
+  </div>
+
+  <!-- Item Quantity Selection (Catalog Only) -->
+  <div id="catalogQtySection" class="bg-white p-4 rounded-xl shadow-sm border mb-4">
+    <div class="flex justify-between items-center">
+      <label class="text-xs font-bold text-tbkoNavy">የዕቃዎች ብዛት (Quantity)፦</label>
+      <input type="number" id="catalogQty" value="1" min="1" onchange="calculatePrices()" class="w-20 text-xs p-2 border rounded-lg text-center font-bold">
+    </div>
+  </div>
 
   <!-- Delivery Method Selection -->
   <div class="bg-white p-4 rounded-xl shadow-sm border mb-4">
     <h3 class="font-bold text-xs text-tbkoNavy mb-3">የመረከቢያ መንገድ</h3>
     
     <div class="space-y-3 text-xs">
-      <!-- Pickup Option -->
       <label class="flex items-center space-x-2 cursor-pointer">
         <input type="radio" name="deliveryOption" value="Pickup" checked class="text-tbkoNavy" onchange="handleDeliveryChange()"> 
         <span class="font-semibold">ከሱቅ እወስዳለሁ (Pickup)</span>
       </label>
       
-      <!-- Branch Selection Dropdown for Pickup -->
       <div id="pickupBranchSection" class="pl-6">
         <label class="block text-[11px] text-gray-500 mb-1">የሚቀርብዎትን ቅርንጫፍ ይምረጡ፦</label>
         <select id="pickupBranch" class="w-full text-xs p-2.5 border rounded-lg bg-slate-50 text-tbkoNavy font-medium">
@@ -52,32 +64,29 @@
 
       <hr class="my-2 border-gray-100">
 
-      <!-- Delivery Option -->
       <label class="flex items-center space-x-2 cursor-pointer">
         <input type="radio" name="deliveryOption" value="Delivery" class="text-tbkoNavy" onchange="handleDeliveryChange()"> 
         <span class="font-semibold">መላኪያ (Delivery)</span>
       </label>
 
-      <!-- Location Input Section for Delivery -->
       <div id="deliveryLocationSection" class="pl-6 space-y-2 hidden">
         <div>
           <label class="block text-[11px] text-gray-500 mb-1">የመላኪያ ክልል/ቦታ ይምረጡ፦</label>
-          <select id="deliveryZone" onchange="updateDeliveryFee()" class="w-full text-xs p-2.5 border rounded-lg bg-slate-50 text-tbkoNavy font-medium">
+          <select id="deliveryZone" onchange="calculatePrices()" class="w-full text-xs p-2.5 border rounded-lg bg-slate-50 text-tbkoNavy font-medium">
             <option value="AddisAbaba" data-fee="150">አዲስ አበባ ውስጥ (150 ETB)</option>
             <option value="Regional" data-fee="300">ክፍለ ሀገር (300 ETB)</option>
           </select>
         </div>
 
         <div>
-          <label class="block text-[11px] text-gray-500 mb-1">ትክክለኛ አድራሻ (ክፍለ ከተማ / ሰፈር ወይም Map Link)፦</label>
+          <label class="block text-[11px] text-gray-500 mb-1">ትክክለኛ አድራሻ (ክፍለ ከተማ / ሰፈር)፦</label>
           <input type="text" id="deliveryAddress" placeholder="ምሳሌ፦ ቦሌ መድኃኔዓለም / ቂርቆስ ወረዳ 02" class="w-full text-xs p-2.5 border rounded-lg bg-slate-50">
         </div>
       </div>
-
     </div>
   </div>
 
-  <!-- Pricing Breakdown -->
+  <!-- Pricing & Advance Breakdown -->
   <div class="bg-white p-4 rounded-xl shadow-sm border space-y-2 mb-4 text-xs">
     <div class="flex justify-between text-gray-600">
       <span>የዕቃዎች ዋጋ:</span>
@@ -89,8 +98,17 @@
     </div>
     <hr class="my-1">
     <div class="flex justify-between font-bold text-sm text-tbkoNavy">
-      <span>ጠቅላላ የሚከፈል:</span>
-      <span id="grandTotal" class="text-tbkoRust font-extrabold">800 ETB</span>
+      <span>ጠቅላላ ሂሳብ:</span>
+      <span id="grandTotal">800 ETB</span>
+    </div>
+
+    <!-- Advance Payment Dynamic Box -->
+    <div id="advanceRuleBox" class="mt-3 p-3 rounded-lg border bg-amber-50 border-amber-200 text-amber-900">
+      <div class="flex justify-between font-extrabold text-xs">
+        <span id="advanceRuleTitle">የሚፈለግ ቅድመ ክፍያ (ቀብድ)፦</span>
+        <span id="requiredAdvanceText" class="text-tbkoRust text-sm">0 ETB</span>
+      </div>
+      <p id="advanceRuleNote" class="text-[10px] text-amber-700 mt-1"></p>
     </div>
   </div>
 
@@ -104,7 +122,7 @@
     </div>
 
     <div>
-      <label class="block text-xs font-bold text-tbkoNavy mb-1">የክፍያ ደረሰኝ (Screenshot)</label>
+      <label class="block text-xs font-bold text-tbkoNavy mb-1">የክፍያ ደረሰኝ (Screenshot) <span class="text-red-500">*</span></label>
       <input type="file" id="receiptInput" accept="image/*" class="w-full text-xs text-gray-500 border rounded-lg p-2 bg-slate-50">
     </div>
   </div>
@@ -115,9 +133,23 @@
   </button>
 
   <script>
-    const basePrice = 800; // Base item price sample
+    let pendingCustomOrder = null;
+    const CATALOG_UNIT_PRICE = 800; // Catalog Item Price
 
-    // Handle visibility of Pickup vs Delivery sections
+    // Check if coming from custom.html on Load
+    window.onload = function() {
+      const savedData = localStorage.getItem('tbko_pending_order');
+      if (savedData) {
+        pendingCustomOrder = JSON.parse(savedData);
+        if (pendingCustomOrder.phone) {
+          document.getElementById('phone').value = pendingCustomOrder.phone;
+        }
+        // Hide catalog qty selector if custom order
+        document.getElementById('catalogQtySection').classList.add('hidden');
+      }
+      calculatePrices();
+    };
+
     function handleDeliveryChange() {
       const selectedOption = document.querySelector('input[name="deliveryOption"]:checked').value;
       const pickupSection = document.getElementById('pickupBranchSection');
@@ -130,43 +162,78 @@
         pickupSection.classList.add('hidden');
         deliverySection.classList.remove('hidden');
       }
-      updateDeliveryFee();
+      calculatePrices();
     }
 
-    // Dynamic Delivery Fee Calculation
-    function updateDeliveryFee() {
-      const selectedOption = document.querySelector('input[name="deliveryOption"]:checked').value;
-      const deliveryFeeElem = document.getElementById('deliveryFee');
-      const grandTotalElem = document.getElementById('grandTotal');
-      
-      let fee = 0;
+    function calculatePrices() {
+      const selectedDelivery = document.querySelector('input[name="deliveryOption"]:checked').value;
+      let deliveryFee = 0;
 
-      if (selectedOption === 'Delivery') {
+      if (selectedDelivery === 'Delivery') {
         const zoneSelect = document.getElementById('deliveryZone');
-        const selectedZoneOption = zoneSelect.options[zoneSelect.selectedIndex];
-        fee = parseInt(selectedZoneOption.getAttribute('data-fee')) || 0;
+        const selectedOption = zoneSelect.options[zoneSelect.selectedIndex];
+        deliveryFee = parseInt(selectedOption.getAttribute('data-fee')) || 0;
       }
 
-      deliveryFeeElem.innerText = fee + " ETB";
-      grandTotalElem.innerText = (basePrice + fee) + " ETB";
+      document.getElementById('deliveryFee').innerText = deliveryFee + " ETB";
+
+      let itemsTotal = 0;
+      let requiredAdvance = 0;
+      let note = "";
+
+      if (pendingCustomOrder) {
+        // Custom Order Logic (50% Advance)
+        itemsTotal = pendingCustomOrder.totalAmount;
+        requiredAdvance = (itemsTotal * 0.50) + deliveryFee;
+        note = "ለCustom ዲዛይን 50% ቅድመ ክፍያ + የትራንስፖርት ክፍያ መከፈል አለበት።";
+      } else {
+        // Catalog Order Logic (1 Qty = No advance, 2+ Qty = 35% Advance)
+        const qty = parseInt(document.getElementById('catalogQty').value) || 1;
+        itemsTotal = qty * CATALOG_UNIT_PRICE;
+
+        if (qty === 1) {
+          requiredAdvance = itemsTotal + deliveryFee; // Full payment
+          note = "ለ 1 እቃ ሙሉ ክፍያ ይፈጸማል።";
+        } else {
+          requiredAdvance = (itemsTotal * 0.35) + deliveryFee; // 35% advance
+          note = "ለ 2 እና ከዚያ በላይ እቃዎች 35% ቅድመ ክፍያ (ቀብድ) + የትራንስፖርት ክፍያ ይበቃል።";
+        }
+      }
+
+      const grandTotal = itemsTotal + deliveryFee;
+
+      document.getElementById('itemsTotal').innerText = itemsTotal + " ETB";
+      document.getElementById('grandTotal').innerText = grandTotal + " ETB";
+      document.getElementById('requiredAdvanceText').innerText = requiredAdvance + " ETB";
+      document.getElementById('advanceRuleNote').innerText = note;
     }
 
-    // Submit Order Payload to Telegram Mini App
     function confirmOrder() {
-      const selectedOption = document.querySelector('input[name="deliveryOption"]:checked').value;
+      const phone = document.getElementById('phone').value.trim();
       const receiptInput = document.getElementById('receiptInput');
 
+      if (!phone) {
+        alert("እባክዎን ስልክ ቁጥርዎን ያስገቡ!");
+        return;
+      }
+
+      if (receiptInput.files.length === 0) {
+        alert("እባክዎን የክፍያ ደረሰኝ (Screenshot) ያያይዙ!");
+        return;
+      }
+
+      const selectedDelivery = document.querySelector('input[name="deliveryOption"]:checked').value;
       let locationDetails = {};
 
-      if (selectedOption === 'Pickup') {
+      if (selectedDelivery === 'Pickup') {
         locationDetails = {
           method: "Pickup",
           branch: document.getElementById('pickupBranch').value
         };
       } else {
-        const address = document.getElementById('deliveryAddress').value;
-        if (!address.trim()) {
-          alert("እባክዎን አድራሻዎን ያስገቡ!");
+        const address = document.getElementById('deliveryAddress').value.trim();
+        if (!address) {
+          alert("እባክዎን የመላኪያ አድራሻዎን ያስገቡ!");
           return;
         }
         const zoneSelect = document.getElementById('deliveryZone');
@@ -177,18 +244,25 @@
         };
       }
 
-      const orderData = {
-        type: "CATALOG_ORDER",
+      const payload = {
+        orderType: pendingCustomOrder ? "CUSTOM_ORDER" : "CATALOG_ORDER",
+        phone: phone,
         deliveryInfo: locationDetails,
-        totalAmount: document.getElementById('grandTotal').innerText,
-        receiptUploaded: receiptInput.files.length > 0 ? receiptInput.files[0].name : "No receipt attached",
-        status: "PAYMENT_SUBMITTED"
+        itemsTotal: document.getElementById('itemsTotal').innerText,
+        deliveryFee: document.getElementById('deliveryFee').innerText,
+        grandTotal: document.getElementById('grandTotal').innerText,
+        requiredAdvance: document.getElementById('requiredAdvanceText').innerText,
+        receiptFileName: receiptInput.files[0].name,
+        orderDetails: pendingCustomOrder ? pendingCustomOrder : { qty: document.getElementById('catalogQty').value }
       };
-      
+
+      // Send Data to Telegram Bot
       if (window.Telegram && window.Telegram.WebApp) {
-        window.Telegram.WebApp.sendData(JSON.stringify(orderData));
+        window.Telegram.WebApp.sendData(JSON.stringify(payload));
+        localStorage.removeItem('tbko_pending_order'); // Clear pending order
       } else {
-        alert("ትዕዛዝዎ ተልኳል!\n" + JSON.stringify(orderData, null, 2));
+        alert("ትዕዛዝዎ ተልኳል!\n" + JSON.stringify(payload, null, 2));
+        localStorage.removeItem('tbko_pending_order');
       }
     }
   </script>
