@@ -151,7 +151,7 @@
   </button>
 
   <script>
-    // 1. Firebase & ImgBB Configuration
+    // 1. Firebase & ImgBB Configuration (አዲሱ API KEY ተተክቷል)
     const IMGBB_API_KEY = "80c60dbefb464422c2ac7c852bf5c9fc";
     const firebaseConfig = {
       apiKey: "AIzaSyCwU7g2s-xRCG3VsipwlqoA5F5R6oPcNdM",
@@ -187,12 +187,10 @@
 
     // Load Order Data & Auto-fill Username on Page Load
     window.onload = function() {
-      // Auto-fill Telegram Username from WebApp SDK if available
       if (tgUser && tgUser.username) {
         document.getElementById('tgUsername').value = `@${tgUser.username}`;
       }
 
-      // Check Custom Order from localStorage
       const savedCustomData = localStorage.getItem('tbko_pending_order');
       if (savedCustomData) {
         pendingCustomOrder = JSON.parse(savedCustomData);
@@ -201,7 +199,6 @@
         }
         document.getElementById('catalogQtySection').classList.add('hidden');
       } else {
-        // Check Catalog Item from localStorage
         const savedCatalogData = localStorage.getItem('tbko_catalog_item');
         if (savedCatalogData) {
           catalogSelectedItem = JSON.parse(savedCatalogData);
@@ -245,12 +242,10 @@
       let note = "";
 
       if (pendingCustomOrder) {
-        // Custom Order Logic (50% Advance)
         itemsTotal = Number(pendingCustomOrder.totalAmount || 0);
         requiredAdvance = (itemsTotal * 0.50) + deliveryFee;
         note = "ለCustom ዲዛይን 50% ቅድመ ክፍያ (ቀብድ) + የትራንስፖርት ክፍያ መከፈል አለበት።";
       } else {
-        // Catalog Order Logic (1 Qty = Full payment, 2+ Qty = 35% Advance)
         const qty = parseInt(document.getElementById('catalogQty').value) || 1;
         itemsTotal = qty * CATALOG_UNIT_PRICE;
 
@@ -286,7 +281,6 @@
         return;
       }
 
-      // ዩዘርኔሙ @ ካሌለው መጨመር
       if (!tgUsernameInput.startsWith('@')) {
         tgUsernameInput = '@' + tgUsernameInput;
       }
@@ -325,7 +319,7 @@
       }
 
       try {
-        // 1. Upload Receipt to ImgBB using Base64 (ያለ CORS Proxy ቀጥታ የሚሰራ)
+        // 1. Upload Receipt to ImgBB using Base64 with URL Query Parameter
         const file = receiptInput.files[0];
         const base64Image = await new Promise((resolve, reject) => {
           const reader = new FileReader();
@@ -335,10 +329,10 @@
         });
 
         const formData = new FormData();
-        formData.append("key", IMGBB_API_KEY);
         formData.append("image", base64Image);
 
-        const imgRes = await fetch("https://api.imgbb.com/1/upload", {
+        // API Key-ኡ በቀጥታ URL ላይ አብሮ ይላካል
+        const imgRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
           method: "POST",
           body: formData
         });
