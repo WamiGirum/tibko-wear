@@ -37,118 +37,145 @@
 
   <div class="max-w-md mx-auto">
     <!-- Header -->
-    <header class="bg-tbkoNavy text-white p-4 rounded-xl shadow mb-6 flex justify-between items-center">
+    <header class="bg-tbkoNavy text-white p-4 rounded-xl shadow mb-4 flex justify-between items-center">
       <div>
         <h1 class="font-bold text-lg">tibko Admin</h1>
-        <p class="text-[10px] text-tbkoGold">የዕቃዎች መቆጣጠሪያ ሰሌዳ</p>
+        <p class="text-[10px] text-tbkoGold">የዕቃዎችና የትዕዛዝ መቆጣጠሪያ ሰሌዳ</p>
       </div>
       <a href="index.html" class="bg-white/10 text-xs px-3 py-1.5 rounded-lg">ወደ ካታሎግ ➔</a>
     </header>
 
-    <!-- Add/Edit Product Form -->
-    <div class="bg-white p-4 rounded-xl shadow mb-6 border">
-      <h2 id="formTitle" class="font-bold text-tbkoNavy mb-3 text-sm flex items-center gap-1">
-        <span>➕</span> አዲስ ቲሸርት መዝግብ
-      </h2>
-
-      <form id="addProductForm" onsubmit="saveProduct(event)" class="space-y-3">
-        <!-- Hidden key & image URL for Editing -->
-        <input type="hidden" id="editKey">
-        <input type="hidden" id="currentImageUrl">
-
-        <div>
-          <label class="text-xs font-bold text-gray-600 block mb-1">የቲሸርቱ ስም</label>
-          <input type="text" id="title" required placeholder="ex: tibko Oversized Rust" class="w-full border p-2 rounded-lg text-xs">
-        </div>
-
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="text-xs font-bold text-gray-600 block mb-1">ካቴጎሪ</label>
-            <select id="category" class="w-full border p-2 rounded-lg text-xs bg-white">
-              <option value="casual">Casual Tees</option>
-              <option value="polo">Polo</option>
-              <option value="cultural">Cultural Prints</option>
-            </select>
-          </div>
-          <div>
-            <label class="text-xs font-bold text-gray-600 block mb-1">ዋጋ (ETB)</label>
-            <input type="number" id="price" required placeholder="800" class="w-full border p-2 rounded-lg text-xs">
-          </div>
-        </div>
-
-        <!-- Image File Upload -->
-        <div>
-          <label class="text-xs font-bold text-gray-600 block mb-1">የቲሸርቱ ፎቶ (Upload Image)</label>
-          <input type="file" id="imageFile" accept="image/*" class="w-full border p-2 rounded-lg text-xs bg-white">
-          <p class="text-[10px] text-gray-400 mt-0.5">ከስልክዎ ወይም ከኮምፒዩተርዎ ፎቶ ይምረጡ</p>
-          <div id="imagePreview" class="mt-2 hidden">
-            <p class="text-[10px] text-gray-500 mb-1">የአሁን ፎቶ፦</p>
-            <img id="previewImg" src="" class="w-16 h-16 object-cover rounded border">
-          </div>
-        </div>
-
-        <!-- Sizes Selection -->
-        <div>
-          <label class="text-xs font-bold text-gray-600 block mb-1">ያሉ መጠኖች (Sizes)</label>
-          <div class="flex flex-wrap gap-2 text-xs">
-            <label class="flex items-center space-x-1 bg-gray-50 px-2 py-1 rounded border">
-              <input type="checkbox" value="S" class="size-checkbox"> <span>S</span>
-            </label>
-            <label class="flex items-center space-x-1 bg-gray-50 px-2 py-1 rounded border">
-              <input type="checkbox" value="M" class="size-checkbox" checked> <span>M</span>
-            </label>
-            <label class="flex items-center space-x-1 bg-gray-50 px-2 py-1 rounded border">
-              <input type="checkbox" value="L" class="size-checkbox" checked> <span>L</span>
-            </label>
-            <label class="flex items-center space-x-1 bg-gray-50 px-2 py-1 rounded border">
-              <input type="checkbox" value="XL" class="size-checkbox" checked> <span>XL</span>
-            </label>
-            <label class="flex items-center space-x-1 bg-gray-50 px-2 py-1 rounded border">
-              <input type="checkbox" value="XXL" class="size-checkbox"> <span>XXL</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Colors Selection -->
-        <div>
-          <label class="text-xs font-bold text-gray-600 block mb-1">ያሉ ቀለሞች (በኮማ ይለዩ)</label>
-          <input type="text" id="colors" placeholder="ጥቁር, ነጭ, ቡናማ" class="w-full border p-2 rounded-lg text-xs">
-        </div>
-
-        <!-- Badge Tag & Subtitle -->
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="text-xs font-bold text-gray-600 block mb-1">ምልክት (Tag/Badge)</label>
-            <select id="tag" class="w-full border p-2 rounded-lg text-xs bg-white">
-              <option value="">ምንም</option>
-              <option value="NEW">NEW</option>
-              <option value="HOT">HOT</option>
-              <option value="POPULAR">POPULAR</option>
-            </select>
-          </div>
-          <div>
-            <label class="text-xs font-bold text-gray-600 block mb-1">አጭር መግለጫ (Subtitle)</label>
-            <input type="text" id="subtitle" placeholder="100% Pure Cotton" class="w-full border p-2 rounded-lg text-xs">
-          </div>
-        </div>
-
-        <button type="submit" id="submitBtn" class="w-full bg-tbkoRust text-white font-bold py-2.5 rounded-lg text-xs shadow hover:bg-orange-700 transition flex items-center justify-center gap-2">
-          <span>💾</span> <span id="submitBtnText">ዕቃውን ለጥፍ (Upload Product)</span>
-        </button>
-
-        <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden w-full bg-gray-200 text-gray-700 font-bold py-2 rounded-lg text-xs transition">
-          ❌ ሰርዝ (Cancel Edit)
-        </button>
-      </form>
+    <!-- Navigation Tabs -->
+    <div class="flex gap-2 mb-4 bg-white p-1 rounded-xl border shadow-sm text-xs font-bold">
+      <button id="tabProductsBtn" onclick="switchTab('products')" class="flex-1 py-2 rounded-lg bg-tbkoNavy text-white transition">
+        📦 ምርቶች (Products)
+      </button>
+      <button id="tabOrdersBtn" onclick="switchTab('orders')" class="flex-1 py-2 rounded-lg text-gray-600 hover:bg-slate-100 transition flex items-center justify-center gap-1">
+        🛒 የገቡ ትዕዛዞች <span id="ordersCountBadge" class="bg-tbkoRust text-white text-[10px] px-1.5 py-0.5 rounded-full hidden">0</span>
+      </button>
     </div>
 
-    <!-- Live Products List -->
-    <div class="bg-white p-4 rounded-xl shadow border">
-      <h2 class="font-bold text-tbkoNavy mb-3 text-sm">📦 በካታሎግ ላይ ያሉ ዕቃዎች</h2>
-      <div id="adminProductList" class="space-y-3">
-        <p class="text-xs text-gray-400 text-center py-4">በመጫን ላይ...</p>
+    <!-- TAB 1: PRODUCTS SECTION -->
+    <div id="productsSection">
+      <!-- Add/Edit Product Form -->
+      <div class="bg-white p-4 rounded-xl shadow mb-6 border">
+        <h2 id="formTitle" class="font-bold text-tbkoNavy mb-3 text-sm flex items-center gap-1">
+          <span>➕</span> አዲስ ቲሸርት መዝግብ
+        </h2>
+
+        <form id="addProductForm" onsubmit="saveProduct(event)" class="space-y-3">
+          <!-- Hidden key & image URL for Editing -->
+          <input type="hidden" id="editKey">
+          <input type="hidden" id="currentImageUrl">
+
+          <div>
+            <label class="text-xs font-bold text-gray-600 block mb-1">የቲሸርቱ ስም</label>
+            <input type="text" id="title" required placeholder="ex: tibko Oversized Rust" class="w-full border p-2 rounded-lg text-xs">
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs font-bold text-gray-600 block mb-1">ካቴጎሪ</label>
+              <select id="category" class="w-full border p-2 rounded-lg text-xs bg-white">
+                <option value="casual">Casual Tees</option>
+                <option value="polo">Polo</option>
+                <option value="cultural">Cultural Prints</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs font-bold text-gray-600 block mb-1">ዋጋ (ETB)</label>
+              <input type="number" id="price" required placeholder="800" class="w-full border p-2 rounded-lg text-xs">
+            </div>
+          </div>
+
+          <!-- Image File Upload -->
+          <div>
+            <label class="text-xs font-bold text-gray-600 block mb-1">የቲሸርቱ ፎቶ (Upload Image)</label>
+            <input type="file" id="imageFile" accept="image/*" class="w-full border p-2 rounded-lg text-xs bg-white">
+            <p class="text-[10px] text-gray-400 mt-0.5">ከስልክዎ ወይም ከኮምፒዩተርዎ ፎቶ ይምረጡ</p>
+            <div id="imagePreview" class="mt-2 hidden">
+              <p class="text-[10px] text-gray-500 mb-1">የአሁን ፎቶ፦</p>
+              <img id="previewImg" src="" class="w-16 h-16 object-cover rounded border">
+            </div>
+          </div>
+
+          <!-- Sizes Selection -->
+          <div>
+            <label class="text-xs font-bold text-gray-600 block mb-1">ያሉ መጠኖች (Sizes)</label>
+            <div class="flex flex-wrap gap-2 text-xs">
+              <label class="flex items-center space-x-1 bg-gray-50 px-2 py-1 rounded border">
+                <input type="checkbox" value="S" class="size-checkbox"> <span>S</span>
+              </label>
+              <label class="flex items-center space-x-1 bg-gray-50 px-2 py-1 rounded border">
+                <input type="checkbox" value="M" class="size-checkbox" checked> <span>M</span>
+              </label>
+              <label class="flex items-center space-x-1 bg-gray-50 px-2 py-1 rounded border">
+                <input type="checkbox" value="L" class="size-checkbox" checked> <span>L</span>
+              </label>
+              <label class="flex items-center space-x-1 bg-gray-50 px-2 py-1 rounded border">
+                <input type="checkbox" value="XL" class="size-checkbox" checked> <span>XL</span>
+              </label>
+              <label class="flex items-center space-x-1 bg-gray-50 px-2 py-1 rounded border">
+                <input type="checkbox" value="XXL" class="size-checkbox"> <span>XXL</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Colors Selection -->
+          <div>
+            <label class="text-xs font-bold text-gray-600 block mb-1">ያሉ ቀለሞች (በኮማ ይለዩ)</label>
+            <input type="text" id="colors" placeholder="ጥቁር, ነጭ, ቡናማ" class="w-full border p-2 rounded-lg text-xs">
+          </div>
+
+          <!-- Badge Tag & Subtitle -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs font-bold text-gray-600 block mb-1">ምልክት (Tag/Badge)</label>
+              <select id="tag" class="w-full border p-2 rounded-lg text-xs bg-white">
+                <option value="">ምንም</option>
+                <option value="NEW">NEW</option>
+                <option value="HOT">HOT</option>
+                <option value="POPULAR">POPULAR</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs font-bold text-gray-600 block mb-1">አጭር መግለጫ (Subtitle)</label>
+              <input type="text" id="subtitle" placeholder="100% Pure Cotton" class="w-full border p-2 rounded-lg text-xs">
+            </div>
+          </div>
+
+          <button type="submit" id="submitBtn" class="w-full bg-tbkoRust text-white font-bold py-2.5 rounded-lg text-xs shadow hover:bg-orange-700 transition flex items-center justify-center gap-2">
+            <span>💾</span> <span id="submitBtnText">ዕቃውን ለጥፍ (Upload Product)</span>
+          </button>
+
+          <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden w-full bg-gray-200 text-gray-700 font-bold py-2 rounded-lg text-xs transition">
+            ❌ ሰርዝ (Cancel Edit)
+          </button>
+        </form>
+      </div>
+
+      <!-- Live Products List -->
+      <div class="bg-white p-4 rounded-xl shadow border">
+        <h2 class="font-bold text-tbkoNavy mb-3 text-sm">📦 በካታሎግ ላይ ያሉ ዕቃዎች</h2>
+        <div id="adminProductList" class="space-y-3">
+          <p class="text-xs text-gray-400 text-center py-4">በመጫን ላይ...</p>
+        </div>
       </div>
     </div>
+
+    <!-- TAB 2: ORDERS SECTION -->
+    <div id="ordersSection" class="hidden">
+      <div class="bg-white p-4 rounded-xl shadow border">
+        <h2 class="font-bold text-tbkoNavy mb-3 text-sm flex items-center justify-between">
+          <span>🛒 የደንበኞች ትዕዛዞች</span>
+          <span class="text-[10px] text-gray-400 font-normal">Realtime Updates</span>
+        </h2>
+        <div id="adminOrdersList" class="space-y-4">
+          <p class="text-xs text-gray-400 text-center py-4">ትዕዛዞች በመጫን ላይ...</p>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -174,6 +201,26 @@
         document.getElementById('loginOverlay').classList.add('hidden');
       } else {
         alert("የተሳሳተ የይለፍ ቃል ነው!");
+      }
+    }
+
+    // Switch between Products and Orders Tabs
+    function switchTab(tab) {
+      const prodSec = document.getElementById('productsSection');
+      const orderSec = document.getElementById('ordersSection');
+      const prodBtn = document.getElementById('tabProductsBtn');
+      const orderBtn = document.getElementById('tabOrdersBtn');
+
+      if (tab === 'products') {
+        prodSec.classList.remove('hidden');
+        orderSec.classList.add('hidden');
+        prodBtn.className = "flex-1 py-2 rounded-lg bg-tbkoNavy text-white transition font-bold";
+        orderBtn.className = "flex-1 py-2 rounded-lg text-gray-600 hover:bg-slate-100 transition font-bold flex items-center justify-center gap-1";
+      } else {
+        prodSec.classList.add('hidden');
+        orderSec.classList.remove('hidden');
+        orderBtn.className = "flex-1 py-2 rounded-lg bg-tbkoNavy text-white transition font-bold flex items-center justify-center gap-1";
+        prodBtn.className = "flex-1 py-2 rounded-lg text-gray-600 hover:bg-slate-100 transition font-bold";
       }
     }
 
@@ -300,6 +347,7 @@
       document.getElementById('cancelBtn').classList.add('hidden');
     }
 
+    // 1. Fetch Live Products
     db.ref('products').on('value', snapshot => {
       const listContainer = document.getElementById('adminProductList');
       listContainer.innerHTML = '';
@@ -342,6 +390,105 @@
       if (confirm("እርግጠኛ ነህ ይህንን ዕቃ ማጥፋት ትፈልጋለህ?")) {
         db.ref('products/' + key).remove();
       }
+    }
+
+    // 2. Fetch Live Orders Realtime
+    db.ref('orders').on('value', snapshot => {
+      const ordersContainer = document.getElementById('adminOrdersList');
+      const badge = document.getElementById('ordersCountBadge');
+      ordersContainer.innerHTML = '';
+
+      const data = snapshot.val();
+      if (!data) {
+        ordersContainer.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">ምንም የገባ ትዕዛዝ የለም።</p>';
+        badge.classList.add('hidden');
+        return;
+      }
+
+      const orderKeys = Object.keys(data).reverse(); // ከቅርብ ጊዜ ወደ ኋላ
+      badge.innerText = orderKeys.length;
+      badge.classList.remove('hidden');
+
+      orderKeys.forEach(key => {
+        const order = data[key];
+        const cleanUsername = order.telegramUser ? order.telegramUser.replace('@', '') : '';
+        const isApproved = order.status === "Approved";
+
+        const orderCard = document.createElement('div');
+        orderCard.className = `p-3 rounded-xl border text-xs space-y-2 ${isApproved ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-200'}`;
+
+        let itemTitle = order.orderDetails?.productTitle || "Custom Order";
+        let qtyText = order.orderDetails?.qty ? `(ብዛት፦ ${order.orderDetails.qty})` : "";
+        let hasReceipt = order.receiptImage && order.receiptImage.startsWith('http');
+
+        orderCard.innerHTML = `
+          <div class="flex justify-between items-center border-b pb-2">
+            <span class="font-bold text-tbkoNavy font-mono">${order.orderId || '#TBK-'+key}</span>
+            <span class="px-2 py-0.5 text-[10px] rounded-full font-bold ${isApproved ? 'bg-green-600 text-white' : 'bg-amber-500 text-white'}">
+              ${order.status || 'Pending'}
+            </span>
+          </div>
+
+          <div class="space-y-1 text-gray-700">
+            <p><strong class="text-tbkoNavy">ዕቃ፦</strong> ${itemTitle} ${qtyText}</p>
+            <p><strong class="text-tbkoNavy">ስልክ፦</strong> <a href="tel:${order.phone}" class="underline font-mono text-blue-600">${order.phone}</a></p>
+            <p><strong class="text-tbkoNavy">Telegram፦</strong> <a href="https://t.me/${cleanUsername}" target="_blank" class="underline font-bold text-tbkoRust">${order.telegramUser}</a></p>
+            <p><strong class="text-tbkoNavy">ቦታ፦</strong> ${order.deliveryInfo?.method === 'Pickup' ? 'ከሱቅ እወስዳለሁ ('+order.deliveryInfo.branch+')' : order.deliveryInfo?.zone + ' - ' + order.deliveryInfo?.address}</p>
+            <p><strong class="text-tbkoNavy">ጠቅላላ ሂሳብ፦</strong> <span class="font-bold text-tbkoNavy">${order.grandTotal}</span> | ቀብድ፦ <span class="font-bold text-tbkoRust">${order.requiredAdvance}</span></p>
+          </div>
+
+          ${hasReceipt ? `
+            <div class="pt-1">
+              <a href="${order.receiptImage}" target="_blank" class="text-[11px] text-blue-600 font-bold underline flex items-center gap-1">
+                🖼️ የክፍያ ደረሰኝ (Screenshot) ተመልከት
+              </a>
+            </div>
+          ` : '<p class="text-[10px] text-gray-400 italic">ደረሰኝ አልተያያዘም</p>'}
+
+          <div class="pt-2 border-t flex flex-col gap-1.5">
+            <!-- Message 1 Button -->
+            <button onclick="sendMsg1('${cleanUsername}')" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-1.5 rounded-lg text-[11px] transition">
+              📩 መልእክት 1 ላክ ("ትንሽ ይታገሱ...")
+            </button>
+
+            <!-- Approve & Message 2 Button -->
+            <button onclick="approveOrder('${key}', '${cleanUsername}', '${order.orderId || key}')" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 rounded-lg text-[11px] transition">
+              ✅ Approve አድርግ & መልእክት 2 ላክ
+            </button>
+          </div>
+        `;
+
+        ordersContainer.appendChild(orderCard);
+      });
+    });
+
+    // Send Message 1: "ትንሽ ይታገሱ ትዕዛዝዎ ክትትል ላይ ነው"
+    function sendMsg1(username) {
+      if (!username) {
+        alert("የደንበኛው ቴሌግራም ዩዘርኔም አልተገኘም!");
+        return;
+      }
+      const text = encodeURIComponent("ሰላም! 👋 ከ tibko WEAR ነው። ትዕዛዝዎ ደርሶናል፤ ትንሽ ይታገሱ ትዕዛዝዎ ክትትል ላይ ነው። ⏳");
+      window.open(`https://t.me/${username}?text=${text}`, '_blank');
+    }
+
+    // Approve Order & Send Message 2: "ትዕዛዝዎ በተሳካ ሁኔታ ታዟል..."
+    function approveOrder(key, username, orderId) {
+      // 1. Update status in Firebase
+      db.ref('orders/' + key).update({
+        status: "Approved",
+        approvedAt: Date.now()
+      }).then(() => {
+        alert(`ትዕዛዝ ${orderId} በተሳካ ሁኔታ Approve ሆኗል!`);
+        
+        // 2. Open Telegram with Message 2
+        if (username) {
+          const text = encodeURIComponent(`ሰላም! 👋 ከ tibko WEAR ነው።\n\nትዕዛዝዎ በተሳካ ሁኔታ ተቀባይነት አግኝቶ ታዟል! 🎉\n🆔 የማዘዣ ቁጥርዎ፦ ${orderId}\n\nስለመረጡን እናመሰግናለን! 👕✨`);
+          window.open(`https://t.me/${username}?text=${text}`, '_blank');
+        }
+      }).catch(err => {
+        alert("ስህተት ተፈጥሯል፦ " + err.message);
+      });
     }
   </script>
 </body>
