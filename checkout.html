@@ -177,18 +177,27 @@
     let catalogSelectedItem = null;
     let CATALOG_UNIT_PRICE = 800; 
 
-    let tgUser = null;
-    let tgChatId = null;
+    // Telegram WebApp ዝግጁ መሆኑን ማረጋገጫ
+    const tg = window.Telegram?.WebApp || null;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+    }
 
-    if (window.Telegram && window.Telegram.WebApp) {
-      window.Telegram.WebApp.ready();
-      tgUser = window.Telegram.WebApp.initDataUnsafe?.user || null;
-      tgChatId = tgUser?.id || null;
+    // ከTelegram Data ለማንበብ የሚረዳ Helper
+    function getTelegramUserData() {
+      if (!tg) return { user: null, chatId: null };
+      const user = tg.initDataUnsafe?.user || null;
+      return {
+        user: user,
+        chatId: user?.id ? String(user.id) : ""
+      };
     }
 
     window.onload = function() {
-      if (tgUser && tgUser.username) {
-        document.getElementById('tgUsername').value = `@${tgUser.username}`;
+      const { user } = getTelegramUserData();
+      if (user && user.username) {
+        document.getElementById('tgUsername').value = `@${user.username}`;
       }
 
       const savedCustomData = localStorage.getItem('tbko_pending_order');
@@ -354,13 +363,16 @@
           receiptUrl = imgData.data.url;
         }
 
+        // ቴሌግራም User ማረጋገጫ
+        const { user, chatId } = getTelegramUserData();
+
         // 2. Build Payload
         const payload = {
           orderId: currentOrderId,
           orderType: pendingCustomOrder ? "CUSTOM_ORDER" : "CATALOG_ORDER",
           phone: phone,
           telegramUser: tgUsernameInput,
-          chatId: tgChatId ? String(tgChatId) : "",
+          chatId: chatId || "",
           deliveryInfo: locationDetails,
           itemsTotal: document.getElementById('itemsTotal').innerText,
           deliveryFee: document.getElementById('deliveryFee').innerText,
@@ -395,31 +407,40 @@
         const cleanOrderId = currentOrderId.replace('#', '');
         await db.ref('orders/' + cleanOrderId).set(payload);
 
+        // 4. Send directly to Render Backend (ለቦቱ ማሳወቂያ እንዲደርስ)
+        try {
+          await fetch('https://tibkowear-bot-1.onrender.com/api/order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        } catch (apiErr) {
+          console.log("Backend API warning:", apiErr);
+        }
+
         // Clear Local Storage
         localStorage.removeItem('tbko_pending_order');
         localStorage.removeItem('tbko_catalog_item');
 
-        // 4. Send directly to Telegram Bot via WebApp SDK
-        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
+        // 5. Telegram WebApp sendData (አስፈላጊ ከሆነ ብቻ)
+        if (tg && tg.initData) {
           try {
-            window.Telegram.WebApp.sendData(JSON.stringify(payload));
+            tg.sendData(JSON.stringify(payload));
           } catch (e) {
-            console.log("sendData error:", e);
+            console.log("sendData ignored:", e);
           }
         }
 
-        // 5. Success Message & Close App Safely
+        // 6. Success Message & Close App Safely
         const successMsg = "ትዕዛዝዎ በስኬት ተልኳል! 🚀\n\nእባክዎን አድሚን አፕሩቭ (Approve) እስኪያደርግ ድረስ ይታገሱ፤ እንደተረጋገጠ በቴሌግራም/በስልክዎ መልዕክት ይደርስዎታል።";
 
-        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.showAlert) {
-          window.Telegram.WebApp.showAlert(successMsg, () => {
-            window.Telegram.WebApp.close();
+        if (tg && tg.showAlert) {
+          tg.showAlert(successMsg, () => {
+            tg.close();
           });
         } else {
           alert(successMsg);
-          if (window.Telegram && window.Telegram.WebApp) {
-            window.Telegram.WebApp.close();
-          }
+          if (tg) tg.close();
         }
 
       } catch (err) {
