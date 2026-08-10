@@ -72,10 +72,11 @@
           </div>
         </div>
 
+        <!-- Direct Image Upload From Phone -->
         <div>
-          <label class="text-xs font-bold text-gray-600 block mb-1">የፎቶ URL (Image Link)</label>
-          <input type="url" id="image" required placeholder="https://..." class="w-full border p-2 rounded-lg text-xs">
-          <p class="text-[10px] text-gray-400 mt-0.5">የምስሉን ሊንክ ያስገቡ</p>
+          <label class="text-xs font-bold text-gray-600 block mb-1">የቲሸርቱን ፎቶ ከስልክህ ምረጥ</label>
+          <input type="file" id="imageFile" accept="image/*" required class="w-full border p-1.5 rounded-lg text-xs bg-gray-50">
+          <p class="text-[10px] text-gray-400 mt-0.5">ከስልክህ ጋለሪ ፎቶ መምረጥ ትችላለህ</p>
         </div>
 
         <!-- Sizes Selection -->
@@ -123,7 +124,7 @@
           </div>
         </div>
 
-        <button type="submit" class="w-full bg-tbkoRust text-white font-bold py-2.5 rounded-lg text-xs shadow hover:bg-orange-700 transition">
+        <button type="submit" id="submitBtn" class="w-full bg-tbkoRust text-white font-bold py-2.5 rounded-lg text-xs shadow hover:bg-orange-700 transition">
           💾 ዕቃውን ለጥፍ (Upload Product)
         </button>
       </form>
@@ -139,7 +140,6 @@
   </div>
 
   <script>
-    // የ Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyCwU7g2s-xRCG3VsipwlqoA5F5R6oPcNdM",
       authDomain: "tibko-wear.firebaseapp.com",
@@ -155,7 +155,7 @@
 
     function checkPass() {
       const pass = document.getElementById('adminPass').value;
-      if (pass === "tbko123") { // 🔑 የይለፍ ቃልህ tbko123 ነው
+      if (pass === "tbko123") {
         document.getElementById('loginOverlay').classList.add('hidden');
       } else {
         alert("የተሳሳተ የይለፍ ቃል ነው!");
@@ -165,32 +165,58 @@
     function saveProduct(e) {
       e.preventDefault();
       
-      const sizes = Array.from(document.querySelectorAll('.size-checkbox:checked')).map(cb => cb.value);
-      const colors = document.getElementById('colors').value.split(',').map(c => c.trim()).filter(c => c);
+      const fileInput = document.getElementById('imageFile');
+      const file = fileInput.files[0];
 
-      const tagValue = document.getElementById('tag').value;
-      let tagColor = "bg-tbkoGold";
-      if (tagValue === "HOT") tagColor = "bg-tbkoRust";
+      if (!file) {
+        alert("እባክዎን ፎቶ ይምረጡ!");
+        return;
+      }
 
-      const newProduct = {
-        title: document.getElementById('title').value,
-        category: document.getElementById('category').value,
-        price: Number(document.getElementById('price').value),
-        image: document.getElementById('image').value,
-        sizes: sizes,
-        colors: colors,
-        tag: tagValue,
-        tagColor: tagColor,
-        subtitle: document.getElementById('subtitle').value,
-        createdAt: Date.now()
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.innerText = "በመጫን ላይ... ⏳";
+      submitBtn.disabled = true;
+
+      // ፎቶውን ከስልክ አንብቦ ወደ Base64 መቀየር
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const base64Image = event.target.result;
+
+        const sizes = Array.from(document.querySelectorAll('.size-checkbox:checked')).map(cb => cb.value);
+        const colors = document.getElementById('colors').value.split(',').map(c => c.trim()).filter(c => c);
+
+        const tagValue = document.getElementById('tag').value;
+        let tagColor = "bg-tbkoGold";
+        if (tagValue === "HOT") tagColor = "bg-tbkoRust";
+
+        const newProduct = {
+          title: document.getElementById('title').value,
+          category: document.getElementById('category').value,
+          price: Number(document.getElementById('price').value),
+          image: base64Image,
+          sizes: sizes,
+          colors: colors,
+          tag: tagValue,
+          tagColor: tagColor,
+          subtitle: document.getElementById('subtitle').value,
+          createdAt: Date.now()
+        };
+
+        db.ref('products').push(newProduct)
+          .then(() => {
+            alert("ምርቱ በተሳካ ሁኔታ ተለጥፏል!");
+            document.getElementById('addProductForm').reset();
+            submitBtn.innerText = "💾 ዕቃውን ለጥፍ (Upload Product)";
+            submitBtn.disabled = false;
+          })
+          .catch(err => {
+            alert("ስህተት ተፈጥሯል፦ " + err.message);
+            submitBtn.innerText = "💾 ዕቃውን ለጥፍ (Upload Product)";
+            submitBtn.disabled = false;
+          });
       };
 
-      db.ref('products').push(newProduct)
-        .then(() => {
-          alert("ምርቱ በተሳካ ሁኔታ ተለጥፏል!");
-          document.getElementById('addProductForm').reset();
-        })
-        .catch(err => alert("ስህተት ተፈጥሯል፦ " + err.message));
+      reader.readAsDataURL(file);
     }
 
     db.ref('products').on('value', snapshot => {
