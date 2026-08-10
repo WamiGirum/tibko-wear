@@ -198,6 +198,9 @@
   </div>
 
   <script>
+    // BOT USERNAME (የቴሌግራም ቦትዎን ዩዘርኔም እዚህ ያስገቡ)
+    const BOT_USERNAME = "tibkowear_bot";
+
     // ImgBB API Key
     const IMGBB_API_KEY = "80c60dbefb464422c2ac7c852bf5c9fc";
 
@@ -438,8 +441,9 @@
 
       orderKeys.forEach(key => {
         const order = data[key];
-        const cleanUsername = order.telegramUser ? order.telegramUser.replace('@', '') : '';
+        const cleanUsername = order.telegramUser ? order.telegramUser.replace('@', '').trim() : '';
         const isApproved = order.status === "Approved";
+        const orderIdVal = order.orderId || '#TBK-' + key;
 
         const orderCard = document.createElement('div');
         orderCard.className = `p-3 rounded-xl border text-xs space-y-2 ${isApproved ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-200'}`;
@@ -450,7 +454,7 @@
 
         orderCard.innerHTML = `
           <div class="flex justify-between items-center border-b pb-2">
-            <span class="font-bold text-tibkoNavy font-mono">${order.orderId || '#TBK-'+key}</span>
+            <span class="font-bold text-tibkoNavy font-mono">${orderIdVal}</span>
             <div class="flex items-center gap-2">
               <span class="px-2 py-0.5 text-[10px] rounded-full font-bold ${isApproved ? 'bg-green-600 text-white' : 'bg-amber-500 text-white'}">
                 ${order.status || 'Pending'}
@@ -463,10 +467,10 @@
 
           <div class="space-y-1 text-gray-700">
             <p><strong class="text-tibkoNavy">ዕቃ፦</strong> ${itemTitle} ${qtyText}</p>
-            <p><strong class="text-tibkoNavy">ስልክ፦</strong> <a href="tel:${order.phone}" class="underline font-mono text-blue-600">${order.phone}</a></p>
-            <p><strong class="text-tibkoNavy">Telegram፦</strong> <a href="https://t.me/${cleanUsername}" target="_blank" class="underline font-bold text-tibkoRust">${order.telegramUser}</a></p>
-            <p><strong class="text-tibkoNavy">ቦታ፦</strong> ${order.deliveryInfo?.method === 'Pickup' ? 'ከሱቅ እወስዳለሁ ('+order.deliveryInfo.branch+')' : order.deliveryInfo?.zone + ' - ' + order.deliveryInfo?.address}</p>
-            <p><strong class="text-tibkoNavy">ጠቅላላ ሂሳብ፦</strong> <span class="font-bold text-tibkoNavy">${order.grandTotal}</span> | ቀብድ፦ <span class="font-bold text-tibkoRust">${order.requiredAdvance}</span></p>
+            <p><strong class="text-tibkoNavy">ስልክ፦</strong> <a href="tel:${order.phone}" class="underline font-mono text-blue-600">${order.phone || 'ያልተገለጸ'}</a></p>
+            <p><strong class="text-tibkoNavy">Telegram፦</strong> ${cleanUsername ? `<a href="https://t.me/${cleanUsername}" target="_blank" class="underline font-bold text-tibkoRust">@${cleanUsername}</a>` : '<span class="text-gray-400">የለም</span>'}</p>
+            <p><strong class="text-tibkoNavy">ቦታ፦</strong> ${order.deliveryInfo?.method === 'Pickup' ? 'ከሱቅ እወስዳለሁ ('+(order.deliveryInfo.branch || 'ዋና ሱቅ')+')' : (order.deliveryInfo?.zone || '') + ' - ' + (order.deliveryInfo?.address || '')}</p>
+            <p><strong class="text-tibkoNavy">ጠቅላላ ሂሳብ፦</strong> <span class="font-bold text-tibkoNavy">${order.grandTotal || 0} ETB</span> | ቀብድ፦ <span class="font-bold text-tibkoRust">${order.requiredAdvance || 0} ETB</span></p>
           </div>
 
           ${hasReceipt ? `
@@ -478,12 +482,12 @@
           ` : '<p class="text-[10px] text-gray-400 italic">ደረሰኝ አልተያያዘም</p>'}
 
           <div class="pt-2 border-t flex flex-col gap-1.5">
-            <button onclick="sendMsg1('${cleanUsername}')" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-1.5 rounded-lg text-[11px] transition">
-              📩 መልእክት 1 ላክ ("ትንሽ ይታገሱ...")
+            <button onclick="sendMsg1ToBot('${key}', '${orderIdVal}')" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-1.5 rounded-lg text-[11px] transition">
+              🤖 ቦት ላይ መልእክት 1 ላክ ("ትንሽ ይታገሱ...")
             </button>
 
-            <button onclick="approveOrder('${key}', '${cleanUsername}', '${order.orderId || key}')" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 rounded-lg text-[11px] transition">
-              ✅ Approve አድርግ & መልእክት 2 ላክ
+            <button onclick="approveOrder('${key}', '${orderIdVal}')" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 rounded-lg text-[11px] transition">
+              ✅ Approve አድርግ & ቦት ላይ መልእክት 2 ላክ
             </button>
           </div>
         `;
@@ -492,27 +496,21 @@
       });
     });
 
-    // Send Message 1
-    function sendMsg1(username) {
-      if (!username) {
-        alert("የደንበኛው ቴሌግራም ዩዘርኔም አልተገኘም!");
-        return;
-      }
-      const text = encodeURIComponent("ሰላም! 👋 ከ tibko WEAR ነው። ትዕዛዝዎ ደርሶናል፤ ትንሽ ይታገሱ ትዕዛዝዎ ክትትል ላይ ነው። ⏳");
-      window.open(`https://t.me/${username}?text=${text}`, '_blank');
+    // Send Message 1 to Bot (Deep link with payload)
+    function sendMsg1ToBot(key, orderId) {
+      const cleanOrderId = orderId.replace('#', '');
+      window.open(`https://t.me/${BOT_USERNAME}?start=wait_${cleanOrderId}`, '_blank');
     }
 
-    // Approve Order & Send Message 2
-    function approveOrder(key, username, orderId) {
+    // Approve Order & Send Message 2 to Bot
+    function approveOrder(key, orderId) {
       db.ref('orders/' + key).update({
         status: "Approved",
         approvedAt: Date.now()
       }).then(() => {
         alert(`ትዕዛዝ ${orderId} በተሳካ ሁኔታ Approve ሆኗል!`);
-        if (username) {
-          const text = encodeURIComponent(`ሰላም! 👋 ከ tibko WEAR ነው።\n\nትዕዛዝዎ በተሳካ ሁኔታ ተቀባይነት አግኝቶ ታዟል! 🎉\n🆔 የማዘዣ ቁጥርዎ፦ ${orderId}\n\nስለመረጡን እናመሰግናለን! 👕✨`);
-          window.open(`https://t.me/${username}?text=${text}`, '_blank');
-        }
+        const cleanOrderId = orderId.replace('#', '');
+        window.open(`https://t.me/${BOT_USERNAME}?start=approve_${cleanOrderId}`, '_blank');
       }).catch(err => {
         alert("ስህተት ተፈጥሯል፦ " + err.message);
       });
