@@ -3,9 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TBKO WEAR - Checkout</title>
+  <title>tibko WEAR - Checkout</title>
+
+  <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Firebase Compatibility SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
   <script>
     tailwind.config = {
       theme: {
@@ -23,8 +31,11 @@
 </head>
 <body class="bg-tbkoBg text-gray-800 font-sans p-4 pb-20">
 
-  <!-- Back Button -->
-  <a href="index.html" class="text-sm text-tbkoNavy font-bold mb-4 inline-block">← ወደ ካታሎግ ተመለስ</a>
+  <!-- Header & Back Button -->
+  <div class="flex justify-between items-center mb-4">
+    <a href="index.html" class="text-sm text-tbkoNavy font-bold">← ወደ ካታሎግ ተመለስ</a>
+    <span id="orderIdTag" class="text-xs font-mono font-bold bg-tbkoRust text-white px-2 py-1 rounded">#TBK-0000</span>
+  </div>
 
   <h2 class="text-xl font-bold text-tbkoNavy mb-2">ትዕዛዝ አረጋግጥ & ክፍያ</h2>
 
@@ -38,7 +49,7 @@
   <div id="catalogQtySection" class="bg-white p-4 rounded-xl shadow-sm border mb-4">
     <div class="flex justify-between items-center">
       <label class="text-xs font-bold text-tbkoNavy">የዕቃዎች ብዛት (Quantity)፦</label>
-      <input type="number" id="catalogQty" value="1" min="1" onchange="calculatePrices()" class="w-20 text-xs p-2 border rounded-lg text-center font-bold">
+      <input type="number" id="catalogQty" value="1" min="1" onchange="calculatePrices()" onkeyup="calculatePrices()" class="w-20 text-xs p-2 border rounded-lg text-center font-bold">
     </div>
   </div>
 
@@ -118,7 +129,7 @@
     <div class="bg-slate-50 p-3 rounded-lg border text-xs text-gray-700 space-y-1">
       <p class="font-bold">🏦 CBE: <span class="font-mono text-tbkoNavy">1000123456789</span></p>
       <p class="font-bold">📲 Telebirr: <span class="font-mono text-tbkoNavy">0911223344</span></p>
-      <p class="text-[10px] text-gray-500">ስም: TBKO WEAR</p>
+      <p class="text-[10px] text-gray-500">ስም: tibko WEAR</p>
     </div>
 
     <div>
@@ -128,24 +139,61 @@
   </div>
 
   <!-- Submit Button -->
-  <button onclick="confirmOrder()" class="w-full bg-tbkoNavy hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl shadow-lg transition">
-    ትዕዛዝ አረጋግጥ (Submit Order)
+  <button id="submitBtn" onclick="confirmOrder()" class="w-full bg-tbkoNavy hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl shadow-lg transition">
+    ትዕዛዝ አረጋግጥ (Submit Order) 🚀
   </button>
 
   <script>
-    let pendingCustomOrder = null;
-    const CATALOG_UNIT_PRICE = 800; // Catalog Item Price
+    // 1. Firebase & ImgBB Configuration
+    const IMGBB_API_KEY = "f8da64ef6dbca33ee35805ef6ec421e4";
+    const firebaseConfig = {
+      apiKey: "AIzaSyCwU7g2s-xRCG3VsipwlqoA5F5R6oPcNdM",
+      authDomain: "tibko-wear.firebaseapp.com",
+      databaseURL: "https://tibko-wear-default-rtdb.firebaseio.com",
+      projectId: "tibko-wear",
+      storageBucket: "tibko-wear.firebasestorage.app",
+      messagingSenderId: "596607988947",
+      appId: "1:596607988947:web:c9e27c89d063c97492502"
+    };
 
-    // Check if coming from custom.html on Load
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Generate Order ID (#TBK-XXXX)
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    const currentOrderId = `#TBK-${randomNum}`;
+    document.getElementById('orderIdTag').innerText = currentOrderId;
+
+    let pendingCustomOrder = null;
+    let catalogSelectedItem = null;
+    let CATALOG_UNIT_PRICE = 800; 
+
+    // Initialize Telegram WebApp
+    let tgUser = null;
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.ready();
+      tgUser = window.Telegram.WebApp.initDataUnsafe?.user || null;
+    }
+
+    // Load Order Data on Page Load
     window.onload = function() {
-      const savedData = localStorage.getItem('tbko_pending_order');
-      if (savedData) {
-        pendingCustomOrder = JSON.parse(savedData);
+      // Check Custom Order from localStorage
+      const savedCustomData = localStorage.getItem('tbko_pending_order');
+      if (savedCustomData) {
+        pendingCustomOrder = JSON.parse(savedCustomData);
         if (pendingCustomOrder.phone) {
           document.getElementById('phone').value = pendingCustomOrder.phone;
         }
-        // Hide catalog qty selector if custom order
         document.getElementById('catalogQtySection').classList.add('hidden');
+      } else {
+        // Check Catalog Item from localStorage
+        const savedCatalogData = localStorage.getItem('tbko_catalog_item');
+        if (savedCatalogData) {
+          catalogSelectedItem = JSON.parse(savedCatalogData);
+          if (catalogSelectedItem.unitPrice) {
+            CATALOG_UNIT_PRICE = Number(catalogSelectedItem.unitPrice);
+          }
+        }
       }
       calculatePrices();
     };
@@ -183,19 +231,19 @@
 
       if (pendingCustomOrder) {
         // Custom Order Logic (50% Advance)
-        itemsTotal = pendingCustomOrder.totalAmount;
+        itemsTotal = Number(pendingCustomOrder.totalAmount || 0);
         requiredAdvance = (itemsTotal * 0.50) + deliveryFee;
-        note = "ለCustom ዲዛይን 50% ቅድመ ክፍያ + የትራንስፖርት ክፍያ መከፈል አለበት።";
+        note = "ለCustom ዲዛይን 50% ቅድመ ክፍያ (ቀብድ) + የትራንስፖርት ክፍያ መከፈል አለበት።";
       } else {
-        // Catalog Order Logic (1 Qty = No advance, 2+ Qty = 35% Advance)
+        // Catalog Order Logic (1 Qty = Full payment, 2+ Qty = 35% Advance)
         const qty = parseInt(document.getElementById('catalogQty').value) || 1;
         itemsTotal = qty * CATALOG_UNIT_PRICE;
 
         if (qty === 1) {
-          requiredAdvance = itemsTotal + deliveryFee; // Full payment
+          requiredAdvance = itemsTotal + deliveryFee;
           note = "ለ 1 እቃ ሙሉ ክፍያ ይፈጸማል።";
         } else {
-          requiredAdvance = (itemsTotal * 0.35) + deliveryFee; // 35% advance
+          requiredAdvance = (itemsTotal * 0.35) + deliveryFee;
           note = "ለ 2 እና ከዚያ በላይ እቃዎች 35% ቅድመ ክፍያ (ቀብድ) + የትራንስፖርት ክፍያ ይበቃል።";
         }
       }
@@ -208,7 +256,7 @@
       document.getElementById('advanceRuleNote').innerText = note;
     }
 
-    function confirmOrder() {
+    async function confirmOrder() {
       const phone = document.getElementById('phone').value.trim();
       const receiptInput = document.getElementById('receiptInput');
 
@@ -222,6 +270,10 @@
         return;
       }
 
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.innerText = "ትዕዛዝ በመላክ ላይ... ⏳";
+
       const selectedDelivery = document.querySelector('input[name="deliveryOption"]:checked').value;
       let locationDetails = {};
 
@@ -234,6 +286,8 @@
         const address = document.getElementById('deliveryAddress').value.trim();
         if (!address) {
           alert("እባክዎን የመላኪያ አድራሻዎን ያስገቡ!");
+          btn.disabled = false;
+          btn.innerText = "ትዕዛዝ አረጋግጥ (Submit Order) 🚀";
           return;
         }
         const zoneSelect = document.getElementById('deliveryZone');
@@ -244,25 +298,73 @@
         };
       }
 
-      const payload = {
-        orderType: pendingCustomOrder ? "CUSTOM_ORDER" : "CATALOG_ORDER",
-        phone: phone,
-        deliveryInfo: locationDetails,
-        itemsTotal: document.getElementById('itemsTotal').innerText,
-        deliveryFee: document.getElementById('deliveryFee').innerText,
-        grandTotal: document.getElementById('grandTotal').innerText,
-        requiredAdvance: document.getElementById('requiredAdvanceText').innerText,
-        receiptFileName: receiptInput.files[0].name,
-        orderDetails: pendingCustomOrder ? pendingCustomOrder : { qty: document.getElementById('catalogQty').value }
-      };
+      try {
+        // 1. Upload Receipt to ImgBB
+        let receiptUrl = "";
+        const file = receiptInput.files[0];
+        const formData = new FormData();
+        formData.append("image", file);
 
-      // Send Data to Telegram Bot
-      if (window.Telegram && window.Telegram.WebApp) {
-        window.Telegram.WebApp.sendData(JSON.stringify(payload));
-        localStorage.removeItem('tbko_pending_order'); // Clear pending order
-      } else {
-        alert("ትዕዛዝዎ ተልኳል!\n" + JSON.stringify(payload, null, 2));
+        const imgRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+          method: "POST",
+          body: formData
+        });
+        const imgData = await imgRes.json();
+
+        if (imgData.success) {
+          receiptUrl = imgData.data.url;
+        } else {
+          throw new Error("የደረሰኝ ፎቶ መጫን አልተቻለም።");
+        }
+
+        // 2. Build Payload
+        const payload = {
+          orderId: currentOrderId,
+          orderType: pendingCustomOrder ? "CUSTOM_ORDER" : "CATALOG_ORDER",
+          phone: phone,
+          deliveryInfo: locationDetails,
+          itemsTotal: document.getElementById('itemsTotal').innerText,
+          deliveryFee: document.getElementById('deliveryFee').innerText,
+          grandTotal: document.getElementById('grandTotal').innerText,
+          requiredAdvance: document.getElementById('requiredAdvanceText').innerText,
+          receiptImage: receiptUrl,
+          telegramUser: tgUser ? `@${tgUser.username || tgUser.first_name}` : "ድረ-ገጽ",
+          status: "Pending",
+          timestamp: Date.now(),
+          orderDetails: pendingCustomOrder ? pendingCustomOrder : {
+            productTitle: catalogSelectedItem ? catalogSelectedItem.title : "Catalog T-Shirt",
+            qty: document.getElementById('catalogQty').value,
+            unitPrice: CATALOG_UNIT_PRICE
+          }
+        };
+
+        // 3. Save Order to Firebase Database
+        const cleanOrderId = currentOrderId.replace('#', '');
+        await db.ref('orders/' + cleanOrderId).set(payload);
+
+        alert(`ትዕዛዝዎ በስኬት ተልኳል!\nትዕዛዝ ቁጥር፦ ${currentOrderId}`);
+
+        // 4. Send Data to Telegram Bot
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
+          window.Telegram.WebApp.sendData(JSON.stringify(payload));
+        }
+
+        // Clear Storage
         localStorage.removeItem('tbko_pending_order');
+        localStorage.removeItem('tbko_catalog_item');
+
+        // Close WebApp or Redirect
+        if (window.Telegram && window.Telegram.WebApp) {
+          window.Telegram.WebApp.close();
+        } else {
+          window.location.href = "index.html";
+        }
+
+      } catch (err) {
+        console.error("Error submitting order:", err);
+        alert("ችግር አጋጥሟል፦ " + err.message);
+        btn.disabled = false;
+        btn.innerText = "ትዕዛዝ አረጋግጥ (Submit Order) 🚀";
       }
     }
   </script>
