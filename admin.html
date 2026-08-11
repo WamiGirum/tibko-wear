@@ -227,7 +227,11 @@
     // ገጹ ሲከፈት ቀደም ሲል ገብቶ እንደሆነ ያረጋግጣል
     auth.onAuthStateChanged((user) => {
       if (user) {
+        // አድሚኑ ከገባ Overlay-ውን ደብቅ
         document.getElementById('loginOverlay').classList.add('hidden');
+      } else {
+        // ካልገባ Login Overlay-ውን አሳይ
+        document.getElementById('loginOverlay').classList.remove('hidden');
       }
     });
 
@@ -252,6 +256,18 @@
       } finally {
         loginBtn.innerText = "ግባ (Login)";
         loginBtn.disabled = false;
+      }
+    }
+
+    // አድሚኑ ከሲስተሙ ሲወጣ (Log Out)
+    function logoutAdmin() {
+      if (confirm("እርግጠኛ ነህ ከአድሚን ገጽ መውጣት ትፈልጋለህ?")) {
+        auth.signOut().then(() => {
+          document.getElementById('loginOverlay').classList.remove('hidden');
+          alert("በተሳካ ሁኔታ ወጥተዋል!");
+        }).catch((error) => {
+          alert("መውጣት አልተቻለም፦ " + error.message);
+        });
       }
     }
 
