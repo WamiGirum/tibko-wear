@@ -403,16 +403,24 @@
           }
         };
 
-        // 3. Store in Firebase Database
+       // 3. Store full details in Firebase Database
         const cleanOrderId = currentOrderId.replace('#', '');
         await db.ref('orders/' + cleanOrderId).set(payload);
 
-        // 4. Send directly to Render Backend (ለቦቱ ማሳወቂያ እንዲደርስ)
+        // 4. Send ONLY SHORT SIGNAL to Render Backend (ለቦቱ ማሳወቂያ እንዲደርስ)
+        const signalPayload = {
+          signal: true,
+          orderId: currentOrderId,
+          chatId: chatId || "",
+          phone: phone,
+          telegramUser: tgUsernameInput
+        };
+
         try {
           await fetch('https://tibkowear-bot-1.onrender.com/api/order', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(signalPayload)
           });
         } catch (apiErr) {
           console.log("Backend API warning:", apiErr);
