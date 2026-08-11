@@ -210,19 +210,48 @@
       appId: "1:596607988947:web:c9e27c89d063c97492502"
     };
 
-    firebase.initializeApp(firebaseConfig);
+    
+    // ይህ የአንድ CHECK PASS fun የተቀየረ ነው!
+    
+        firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    const auth = firebase.auth();
     let localProducts = {};
 
-    function checkPass() {
-      const pass = document.getElementById('adminPass').value;
-      if (pass === "tbko123") {
+    // ገጹ ሲከፈት ቀደም ሲል ገብቶ እንደሆነ ያረጋግጣል
+    auth.onAuthStateChanged((user) => {
+      if (user) {
         document.getElementById('loginOverlay').classList.add('hidden');
-      } else {
-        alert("የተሳሳተ የይለፍ ቃል ነው!");
+      }
+    });
+
+    async function checkPass() {
+      const email = document.getElementById('adminEmail').value.trim();
+      const pass = document.getElementById('adminPass').value;
+      const loginBtn = document.getElementById('loginBtn');
+
+      if (!email || !pass) {
+        alert("እባክዎ ኢሜይል እና የይለፍ ቃል ያስገቡ!");
+        return;
+      }
+
+      try {
+        loginBtn.innerText = "በማረጋገጥ ላይ...";
+        loginBtn.disabled = true;
+
+        await auth.signInWithEmailAndPassword(email, pass);
+        document.getElementById('loginOverlay').classList.add('hidden');
+      } catch (error) {
+        alert("የተሳሳተ ኢሜይል ወይም የይለፍ ቃል ነው!");
+      } finally {
+        loginBtn.innerText = "ግባ (Login)";
+        loginBtn.disabled = false;
       }
     }
 
+
+// ይሄ ደሞ fun OPEN IMAGE ነው!
+    
     function openImageModal(url, title = "የፎቶ እይታ") {
       document.getElementById('modalTitle').innerText = title;
       document.getElementById('modalImage').src = url;
