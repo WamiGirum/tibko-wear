@@ -176,50 +176,23 @@
       });
     }
 
-    // 5. Cart Counter & Storage Logic (የተስተካከለ)
+    // ❌ ነባሩ እና ስህተት የነበረበት ኮድ
+let cartCount = 0;
+function addToCart(id, title, price) {
+  cartCount++;
+  document.getElementById('cartCount').innerText = cartCount;
+
+  const selectedProduct = {
+    isCustom: false,
+    productId: id,
+    title: title,
+    unitPrice: price
+  };
+  localStorage.setItem('tbko_catalog_item', JSON.stringify(selectedProduct)); // 👈 ችግሩ እዚሁ ነው!
+}
     
-    // ገጹ ሲከፈት በበፊቱ የተቀመጠ ካርት ካለ መጫን እና መቁጠሪያውን ማዘመን
-    function getCart() {
-      return JSON.parse(localStorage.getItem('tbko_cart')) || [];
-    }
-
-    function updateCartBadge() {
-      const cart = getCart();
-      // የሁሉም ምርቶች ብዛት (Quantity) ድምር
-      const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-      document.getElementById('cartCount').innerText = totalCount;
-    }
-
-    function addToCart(id, title, price) {
-      let cart = getCart();
-
-      // ምርቱ ቀደም ብሎ ካርቱ ውስጥ እንዳለ ቼክ ማድረግ
-      const existingItemIndex = cart.findIndex(item => item.productId === id);
-
-      if (existingItemIndex > -1) {
-        // ካለ ብዛቱን (quantity) በ1 መጨመር (ለምሳሌ A = 2 እንዲሆን)
-        cart[existingItemIndex].quantity += 1;
-      } else {
-        // አዲስ ከሆነ ወደ Array መጨመር (quantity: 1 አድርጎ)
-        cart.push({
-          isCustom: false,
-          productId: id,
-          title: title,
-          unitPrice: Number(price),
-          quantity: 1
-        });
-      }
-
-      // የተሻሻለውን ካርት ማስቀመጥ
-      localStorage.setItem('tbko_cart', JSON.stringify(cart));
-
-      // የላይኛውን Cart Counter ቁጥር ማዘመን
-      updateCartBadge();
-    }
-
-    // ገጹ በይነመረብ ላይ ሲከፈት የመቁጠሪያውን ቁጥር ዝግጁ ማድረግ
-    document.addEventListener('DOMContentLoaded', updateCartBadge);
-
+    //   ezi deres tekeyerwal
+    
   </script>
 
 </body>
